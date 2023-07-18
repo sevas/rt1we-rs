@@ -1,11 +1,11 @@
+mod types;
+mod ray;
+
 use crate::types::{ImageRGBA, Vec3};
 use std::fs::File;
-use std::io::{BufWriter, Write, self};
-use std::thread::sleep;
-use std::{time};
+use std::io::{BufWriter, Write};
 
 
-mod types;
 
 fn ppmwrite(fname: &str, im: ImageRGBA) {
     let f = File::create(fname).expect("Unable to create file");
@@ -53,28 +53,9 @@ fn render(im: &mut ImageRGBA){
 }
 
 fn main() {
-    // let mut im = ImageRGBA::new(256, 256);
-    // render(&mut im);
-    // ppmwrite("image2.ppm", im);
-
-    //
-    // let p = Vec3 {x: 1.0, y: 2.0, z: 3.0 };
-    // let q = Vec3 {x: 4.0, y: 5.0, z: 6.0 };
-    //
-    // println!("{p:?}");
-    // println!("{q:?}");
-    //
-    // let pq = p.add(&q);
-    // println!("{pq:?}");
-    //
-    //
-    // let pq = &p + &q;
-    // println!("{pq:?}");
-    // //
-    // println!("{q:?}");
-    //
-    // let q2 = 2.0*q;
-    // println!("{q2:?}");
+    let mut im = ImageRGBA::new(256, 256);
+    render(&mut im);
+    ppmwrite("image2.ppm", im);
 
 }
 
