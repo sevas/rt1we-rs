@@ -1,6 +1,8 @@
 use crate::types::ImageRGBA;
 use std::fs::File;
-use std::io::{BufWriter, Write};
+use std::io::{BufWriter, Write, self};
+use std::thread::sleep;
+use std::time;
 
 mod types;
 
@@ -23,8 +25,14 @@ fn ppmwrite(fname: &str, im: ImageRGBA) {
 }
 
 
-fn fill_2d_gradient(im: &mut ImageRGBA){
-    for j in 0..im.height {
+fn render(im: &mut ImageRGBA){
+    for j in (0..im.height).rev() {
+        // io::stdout().flush().unwrap();
+        // print!("{}", (8u8 as char));
+        print!("\rScanlines remaining {j}");
+
+        // io::stdout().flush().unwrap();
+
         for i in 0..im.width {
 
             let r = i as f64 / (im.width-1) as f64;
@@ -36,13 +44,15 @@ fn fill_2d_gradient(im: &mut ImageRGBA){
             let ib = (255.999 * b) as u8;
             im.put(i, j, ir, ig, ib, 255);
         }
+
+
     }
+
+    println!("\nDone.")
 }
 
 fn main() {
-
     let mut im = ImageRGBA::new(256, 256);
-
-    fill_2d_gradient(&mut im);
+    render(&mut im);
     ppmwrite("image2.ppm", im);
 }
