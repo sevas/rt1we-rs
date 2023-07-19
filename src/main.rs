@@ -1,7 +1,7 @@
 mod types;
 mod ray;
 
-use crate::types::{ImageRGBA, Vec3, Color, WHITE, Point, lerp};
+use crate::types::{ImageRGBA, Vec3, Color, WHITE, Point, lerp, dot, RED};
 use crate::ray::{Ray};
 use std::fs::File;
 use std::io::{BufWriter, Write};
@@ -26,7 +26,21 @@ fn ppmwrite(fname: &str, im: ImageRGBA) {
 }
 
 
+fn hit_sphere(center: &Point, radius: f32, r: &Ray) -> bool{
+    let oc = &r.orig - &center;
+    let a = dot(&r.dir, &r.dir);
+    let b = 2.0 * dot(&oc, &r.dir);
+    let c = dot(&oc, &oc) - radius*radius;
+    let disc = b*b - 4.0*a*c;
+    disc > 0.0
+}
+
 fn ray_color(r: &Ray) -> Color {
+
+    if (hit_sphere(&Point{x:0.0, y:0.0, z:-1.0}, 0.5, r)){
+        return RED;
+    }
+
     let unit_direction = &r.dir.normed();
     let t = 0.5 * (unit_direction.y + 1.0);
     lerp(&WHITE, &Color { x: 0.5, y: 0.7, z: 1.0 }, 1.0-t)
@@ -76,6 +90,6 @@ fn render() -> ImageRGBA {
 
 fn main() {
     let im = render();
-    ppmwrite("image2.ppm", im);
+    ppmwrite("out/image002.ppm", im);
 }
 
