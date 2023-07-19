@@ -1,4 +1,4 @@
-use crate::types::ImageRGBA;
+use crate::image::ImageRGBA;
 use std::fs::File;
 use std::io::{BufWriter, Write};
 

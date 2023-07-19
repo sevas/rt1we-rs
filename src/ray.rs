@@ -1,4 +1,4 @@
-use crate::types::{Point, Vec3};
+use crate::geometry::{Point, Vec3};
 
 #[derive(Debug)]
 /// Vec3 representation
@@ -15,9 +15,9 @@ impl Ray {
 
 #[cfg(test)]
 pub(crate) mod test {
+    use crate::geometry::Point;
+    use crate::geometry::Vec3;
     use crate::ray::Ray;
-    use crate::types::Point;
-    use crate::types::Vec3;
 
     #[test]
     fn test_projection() {

@@ -1,13 +1,15 @@
 #[macro_use]
 extern crate assert_float_eq;
+mod geometry;
+mod image;
 mod ppmio;
 mod ray;
 mod trig;
-mod types;
 
+use crate::geometry::{dot, lerp, Color, Point, Vec3, WHITE};
+use crate::image::ImageRGBA;
 use crate::ppmio::ppmwrite;
 use crate::ray::Ray;
-use crate::types::{dot, lerp, Color, ImageRGBA, Point, Vec3, WHITE};
 
 fn hit_sphere(center: &Point, radius: f32, r: &Ray) -> f32 {
     // Sphere hits are the points where:
