@@ -1,6 +1,6 @@
 use std::ops;
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 /// Vec3 representation
 pub struct Vec3 {
     pub x: f32,
@@ -93,10 +93,35 @@ impl ops::Add for Vec3 {
 /// ```
 impl<'a, 'b> ops::Add<&'a Vec3> for &'b Vec3 {
     type Output = Vec3;
-    fn add(self, other: &Vec3) -> Vec3 {
+    fn add(self, other: &'a Vec3) -> Vec3 {
         Vec3 { x: self.x + other.x, y: self.y + other.y, z: self.z + other.z }
     }
 }
+
+
+impl ops::Sub for Vec3 {
+    type Output = Vec3;
+    fn sub(self, other: Vec3) -> Vec3 {
+        Vec3 { x: self.x - other.x, y: self.y - other.y, z: self.z - other.z }
+    }
+}
+
+
+/// Returns diff of 2 Vec3, using references
+///
+/// # Examples
+/// ```
+/// let p = Vec3{...};
+/// let q = Vec3{...};
+/// let r = &p - &q;
+/// ```
+impl<'a, 'b> ops::Sub<&'a Vec3> for &'b Vec3 {
+    type Output = Vec3;
+    fn sub(self, other: &'a Vec3) -> Vec3 {
+        Vec3 { x: self.x - other.x, y: self.y - other.y, z: self.z - other.z }
+    }
+}
+
 
 /// Multiply a Vec3 by a scalar
 ///
@@ -133,13 +158,20 @@ impl<'a> ops::Mul<f32> for &'a Vec3 {
 /// let p = Vec3 { ... }
 /// let q = 3.5 * p;
 /// ```
-
 impl ops::Mul<Vec3> for f32 {
     type Output = Vec3;
     fn mul(self, v: Vec3) -> Vec3 {
         Vec3 { x: self * v.x, y: self * v.y, z: self * v.z }
     }
 }
+
+impl<'a> ops::Mul<&'a Vec3> for f32 {
+    type Output = Vec3;
+    fn mul(self, v: &Vec3) -> Vec3 {
+        Vec3 { x: self * v.x, y: self * v.y, z: self * v.z }
+    }
+}
+
 
 /// Divide a Vec3 by a scalar
 ///
@@ -200,29 +232,29 @@ impl PartialEq for Vec3 {
     }
 }
 
+pub fn lerp(a: &Vec3, b: &Vec3, t: f32) -> Vec3{
+    (1.0 - t) * a + (t * b)
+}
 
 pub type Point = Vec3;
+pub type Color = Vec3;
 
-pub struct Color {
-    r: u8,
-    g: u8,
-    b: u8,
-    a: u8,
-}
-
-impl Color {
-    pub const RED: Color = Color { r: 200, g: 0, b: 0, a: 255 };
-    pub const GREEN: Color = Color { r: 0, g: 200, b: 0, a: 255 };
-    pub const BLUE: Color = Color { r: 0, g: 0, b: 200, a: 255 };
-    pub const WHITE: Color = Color { r: 255, g: 255, b: 255, a: 255 };
-    pub const BLACK: Color = Color { r: 0, g: 0, b: 0, a: 255 };
-    pub const CYAN: Color = Color { r: 34, g: 166, b: 153, a: 255 };
-    pub const YELLOW: Color = Color { r: 242, g: 190, b: 34, a: 255 };
-
-    pub fn new() -> Color {
-        Color { r: 0, g: 0, b: 0, a: 255 }
+pub fn make_color_from_u8(r: u8, g: u8, b: u8) -> Color {
+    Color {
+        x: r as f32 / 255.0,
+        y: g as f32 / 255.0,
+        z: b as f32 / 255.0,
     }
 }
+
+
+pub const RED: Color = Color { x: 200.0 / 255.0, y: 0.0 / 255.0, z: 0.0 / 255.0 };
+pub const GREEN: Color = Color { x: 0.0 / 255.0, y: 200.0 / 255.0, z: 0.0 / 255.0 };
+pub const BLUE: Color = Color { x: 0.0 / 255.0, y: 0.0 / 255.0, z: 200.0 / 255.0 };
+pub const WHITE: Color = Color { x: 255.0 / 255.0, y: 255.0 / 255.0, z: 255.0 / 255.0 };
+pub const BLACK: Color = Color { x: 0.0 / 255.0, y: 0.0 / 255.0, z: 0.0 / 255.0 };
+pub const CYAN: Color = Color { x: 34.0 / 255.0, y: 166.0 / 255.0, z: 153.0 / 255.0 };
+pub const YELLOW: Color = Color { x: 242.0 / 255.0, y: 190.0 / 255.0, z: 34.0 / 255.0 };
 
 
 #[derive(Debug)]
@@ -273,6 +305,7 @@ impl ImageRGBA {
 #[cfg(test)]
 pub(crate) mod test {
     mod vec3 {
+        use crate::types::lerp;
         use crate::Vec3;
 
         #[test]
@@ -324,7 +357,6 @@ pub(crate) mod test {
             assert_eq!(expected, minus_p);
         }
 
-
         #[test]
         fn test_div() {
             let p = Vec3 { x: 1.0, y: 2.0, z: 3.0 };
@@ -345,7 +377,7 @@ pub(crate) mod test {
         }
 
         #[test]
-        fn test_cross_product_XcYeqZ() {
+        fn test_cross_product_x_cross_y_eq_z() {
             let p = Vec3::UNIT_X;
             let q = Vec3::UNIT_Y;
 
@@ -372,6 +404,31 @@ pub(crate) mod test {
             let expected = Vec3 { x: 1.0 / sz, y: 2.0 / sz, z: 3.0 / sz };
             assert_eq!(expected, pn);
             assert!(f32::abs(pn.len() - 1.0) < f32::EPSILON);
+        }
+
+        #[test]
+        fn test_expression() {
+            let p = Vec3 { x: 1.0, y: 2.0, z: 3.0 };
+            let q = Vec3 { x: 4.0, y: 5.0, z: 6.0 };
+
+            let sum = &p + &q;
+            let diff = &p - &q;
+
+            assert_eq!(Vec3 { x: 5.0, y: 7.0, z: 9.0 }, sum);
+            assert_eq!(Vec3 { x: -3.0, y: -3.0, z: -3.0 }, diff);
+
+            let expr = &p + &(&q - &p);
+            assert_eq!(Vec3 { x: 4.0, y: 5.0, z: 6.0 }, expr);
+        }
+
+        #[test]
+        fn test_lerp() {
+            let p = Vec3::ZERO;
+            let q = Vec3 { x: 1.0, y: 1.0, z: 1.0 };
+            let t = 0.5;
+
+            let half = lerp(&p, &q, t);
+            assert_eq!(Vec3 { x: 0.5, y: 0.5, z: 0.5 }, half);
         }
     }
 }
