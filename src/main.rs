@@ -7,7 +7,6 @@ use crate::ray::Ray;
 use crate::types::{dot, lerp, Color, ImageRGBA, Point, Vec3, RED, WHITE};
 use std::io::Write;
 
-///
 fn hit_sphere(center: &Point, radius: f32, r: &Ray) -> f32 {
     // Sphere hits are the points where:
     //      x^2 + y^2 + z^2 - r^2 = 0
@@ -35,8 +34,23 @@ fn hit_sphere(center: &Point, radius: f32, r: &Ray) -> f32 {
     }
 }
 
+// Same as hit_sphere(), but simplified formulas, mostly removes sqrt's
+fn hit_sphere2(center: &Point, radius: f32, r: &Ray) -> f32 {
+    let oc = &r.orig - &center;
+    let a = r.dir.len_squared();
+    let half_b = dot(&oc, &r.dir);
+    let c = oc.len_squared() - radius * radius;
+    let disc = (half_b * half_b) - (a * c);
+
+    if disc < 0.0 {
+        return -1.0;
+    } else {
+        (-half_b - disc.sqrt()) / a
+    }
+}
+
 fn ray_color(r: &Ray) -> Color {
-    let t = hit_sphere(
+    let t = hit_sphere2(
         &Point {
             x: 0.0,
             y: 0.0,
@@ -135,5 +149,5 @@ fn render() -> ImageRGBA {
 
 fn main() {
     let im = render();
-    ppmwrite("out/image003.ppm", im);
+    ppmwrite("out/image004.ppm", im);
 }
