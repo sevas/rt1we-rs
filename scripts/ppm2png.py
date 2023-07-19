@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import imageio as io
 import sys
 
