@@ -1,11 +1,10 @@
-mod types;
 mod ray;
+mod types;
 
-use crate::types::{ImageRGBA, Vec3, Color, WHITE, Point, lerp, dot, RED};
-use crate::ray::{Ray};
+use crate::ray::Ray;
+use crate::types::{dot, lerp, Color, ImageRGBA, Point, Vec3, RED, WHITE};
 use std::fs::File;
 use std::io::{BufWriter, Write};
-
 
 fn ppmwrite(fname: &str, im: ImageRGBA) {
     let f = File::create(fname).expect("Unable to create file");
@@ -14,17 +13,18 @@ fn ppmwrite(fname: &str, im: ImageRGBA) {
     let h = im.height;
     let header = format!("P3\n{w} {h}\n255\n");
 
-    f.write_all(header.as_bytes()).expect("unable to write data");
+    f.write_all(header.as_bytes())
+        .expect("unable to write data");
     let count = w * h;
     for i in 0..count {
         let r = im.pixels[i * 4];
         let g = im.pixels[i * 4 + 1];
         let b = im.pixels[i * 4 + 2];
 
-        f.write_fmt(format_args!("{r} {g} {b}\n")).expect("unable to write data");
+        f.write_fmt(format_args!("{r} {g} {b}\n"))
+            .expect("unable to write data");
     }
 }
-
 
 fn hit_sphere(center: &Point, radius: f32, r: &Ray) -> f32 {
     let oc = &r.orig - &center;
@@ -35,24 +35,49 @@ fn hit_sphere(center: &Point, radius: f32, r: &Ray) -> f32 {
 
     if disc < 0.0 {
         return -1.0;
-    }
-    else {
-        (-b - disc.sqrt()) / (2.0*a)
+    } else {
+        (-b - disc.sqrt()) / (2.0 * a)
     }
 }
 
 fn ray_color(r: &Ray) -> Color {
-    let t =  hit_sphere(&Point { x: 0.0, y: 0.0, z: -1.0 }, 0.5, r);
+    let t = hit_sphere(
+        &Point {
+            x: 0.0,
+            y: 0.0,
+            z: -1.0,
+        },
+        0.5,
+        r,
+    );
 
     if t > 0.0 {
-        let n = (r.at(t) - Vec3{x: 0.0, y: 0.0, z: -1.0}).normed();
-        return 0.5 * Color {x: n.x + 1.0, y: n.y + 1.0, z: n.z + 1.0}
+        let n = (r.at(t)
+            - Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: -1.0,
+            })
+        .normed();
+        return 0.5
+            * Color {
+                x: n.x + 1.0,
+                y: n.y + 1.0,
+                z: n.z + 1.0,
+            };
     }
     let unit_direction = &r.dir.normed();
     let t = 0.5 * (unit_direction.y + 1.0);
-    lerp(&WHITE, &Color { x: 0.5, y: 0.7, z: 1.0 }, 1.0 - t)
+    lerp(
+        &WHITE,
+        &Color {
+            x: 0.5,
+            y: 0.7,
+            z: 1.0,
+        },
+        1.0 - t,
+    )
 }
-
 
 fn render() -> ImageRGBA {
     // image
@@ -66,11 +91,29 @@ fn render() -> ImageRGBA {
     let vp_width = aspect_ratio * vp_height;
     let focal_length = 1.0;
 
-    let origin = Point { x: 0.0, y: 0.0, z: 0.0 };
-    let horizontal = Vec3 { x: vp_width as f32, y: 0.0, z: 0.0 };
-    let vertical = Vec3 { x: 0.0, y: vp_height as f32, z: 0.0 };
-    let lower_left_corner = &origin - &(horizontal / 2.0) - (vertical / 2.0) - Vec3 { x: 0.0, y: 0.0, z: focal_length };
-
+    let origin = Point {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    };
+    let horizontal = Vec3 {
+        x: vp_width as f32,
+        y: 0.0,
+        z: 0.0,
+    };
+    let vertical = Vec3 {
+        x: 0.0,
+        y: vp_height as f32,
+        z: 0.0,
+    };
+    let lower_left_corner = &origin
+        - &(horizontal / 2.0)
+        - (vertical / 2.0)
+        - Vec3 {
+            x: 0.0,
+            y: 0.0,
+            z: focal_length,
+        };
 
     for j in (0..im.height).rev() {
         print!("\rScanlines remaining {j}");
@@ -99,4 +142,3 @@ fn main() {
     let im = render();
     ppmwrite("out/image003.ppm", im);
 }
-
