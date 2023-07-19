@@ -101,6 +101,22 @@ pub(crate) mod test {
         }
     }
 
+    #[test]
+    fn test_can_put_pixel_as_u32() {
+        let w = 10usize;
+        let h = 10usize;
+        let mut im = ImageRGBA::new(w, h);
+
+        im.put_u32(5, 5, 0xFF0000FF);
+
+        let (r, g, b, a) = im.at(5, 5);
+        assert_eq!(r, 255);
+        assert_eq!(g, 0);
+        assert_eq!(b, 0);
+        assert_eq!(a, 255);
+    }
+
+    #[test]
     fn test_can_put_pixel_as_u8() {
         let w = 10usize;
         let h = 10usize;
@@ -114,6 +130,4 @@ pub(crate) mod test {
         assert_eq!(b, 0);
         assert_eq!(a, 255);
     }
-
-    fn test_can_get_pixel_as_u32() {}
 }
