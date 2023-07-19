@@ -13,6 +13,7 @@ if __name__ == '__main__':
     if os.path.isfile(src_fpath):
         ppm2png(src_fpath)
     elif os.path.isdir(src_fpath):
-        for each in os.listdir(src_fpath):
+        for each in sorted(os.listdir(src_fpath)):
             if each.endswith(".ppm"):
+                print(f"Converting {each}")
                 ppm2png(os.path.join(src_fpath, each))
