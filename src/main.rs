@@ -130,6 +130,7 @@ impl Material for Lambertian {
 #[derive(Copy, Clone, Debug)]
 struct Metal {
     albedo: Color,
+    fuzz: f32,
 }
 
 impl Material for Metal {
@@ -139,7 +140,7 @@ impl Material for Metal {
         let reflected = reflect(&r_in.dir.normed(), &rec.normal);
         *scattered = Ray {
             orig: rec.p,
-            dir: reflected,
+            dir: reflected + self.fuzz * random_in_unit_sphere(),
         };
         *attenuation = self.albedo;
         let res = dot(&scattered.dir, &rec.normal) > 0.0;
@@ -431,6 +432,7 @@ fn render() -> ImageRGBA {
             y: 0.8,
             z: 0.8,
         },
+        fuzz: 0.3,
     }));
     materials.push(Box::new(Metal {
         albedo: Color {
@@ -438,6 +440,7 @@ fn render() -> ImageRGBA {
             y: 0.6,
             z: 0.2,
         },
+        fuzz: 1.0,
     }));
 
     // world
@@ -453,7 +456,7 @@ fn render() -> ImageRGBA {
     });
     world.add(&Sphere {
         center: Point {
-            x: 1.0,
+            x: -1.0,
             y: 0.0,
             z: -1.0,
         },
@@ -462,7 +465,7 @@ fn render() -> ImageRGBA {
     });
     world.add(&Sphere {
         center: Point {
-            x: -1.0,
+            x: 1.0,
             y: 0.0,
             z: -1.0,
         },
@@ -520,5 +523,5 @@ fn render() -> ImageRGBA {
 
 fn main() {
     let im = render();
-    ppmwrite("out/image013.ppm", im);
+    ppmwrite("out/image014.ppm", im);
 }
