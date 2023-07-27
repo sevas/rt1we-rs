@@ -221,7 +221,7 @@ fn ray_color_2(r: &Ray, world: &HittableList, depth: usize) -> Color {
         };
     }
 
-    if world.hit(&r, 0.0, f32::INFINITY, &mut rec) {
+    if world.hit(&r, 0.001, f32::INFINITY, &mut rec) {
         let target = rec.p + rec.normal + random_in_unit_sphere();
         let new_ray = Ray {
             orig: rec.p,
@@ -383,5 +383,5 @@ fn render() -> ImageRGBA {
 
 fn main() {
     let im = render();
-    ppmwrite("out/image009.ppm", im);
+    ppmwrite("out/image010.ppm", im);
 }
