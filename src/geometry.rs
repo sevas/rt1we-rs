@@ -88,6 +88,7 @@ impl Vec3 {
         }
     }
 
+    /// Returns a random vector with values in the `[0;1]` range.
     pub fn random() -> Vec3 {
         let mut rng = rand::thread_rng();
 
@@ -98,6 +99,7 @@ impl Vec3 {
         }
     }
 
+    /// Returns a random vector with values in a given range.
     pub fn random_range(lo: f32, hi: f32) -> Vec3 {
         let mut rng = rand::thread_rng();
 
@@ -106,6 +108,11 @@ impl Vec3 {
             y: rng.gen_range(lo..hi),
             z: rng.gen_range(lo..hi),
         }
+    }
+
+    /// Returns true if the vector is close to 0 in all dimensions
+    pub fn near_zero(&self) -> bool {
+        self.x.abs() < f32::EPSILON && self.y.abs() < f32::EPSILON && self.z.abs() < f32::EPSILON
     }
 }
 
@@ -121,6 +128,10 @@ pub fn random_in_unit_sphere() -> Vec3 {
 
 pub fn random_unit_vector() -> Vec3 {
     random_in_unit_sphere().normed()
+}
+
+pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
+    v - &(2.0 * &(dot(&n, &v) * n))
 }
 
 // older method
@@ -189,6 +200,17 @@ impl<'a, 'b> ops::Sub<&'a Vec3> for &'b Vec3 {
             x: self.x - other.x,
             y: self.y - other.y,
             z: self.z - other.z,
+        }
+    }
+}
+
+impl ops::Mul<Vec3> for Vec3 {
+    type Output = Vec3;
+    fn mul(self, rhs: Vec3) -> Vec3 {
+        Vec3 {
+            x: self.x * rhs.x,
+            y: self.y * rhs.y,
+            z: self.z * rhs.z,
         }
     }
 }
@@ -465,6 +487,29 @@ pub(crate) mod test {
         }
 
         #[test]
+        fn test_mul_vec_with_vec() {
+            let v = Vec3 {
+                x: 0.0,
+                y: 1.0,
+                z: 2.0,
+            };
+            let w = Vec3 {
+                x: 3.0,
+                y: 4.0,
+                z: 5.0,
+            };
+
+            assert_eq!(
+                v * w,
+                Vec3 {
+                    x: 0.0,
+                    y: 4.0,
+                    z: 10.0
+                }
+            )
+        }
+
+        #[test]
         fn test_unary_neg() {
             let p = Vec3 {
                 x: 1.0,
@@ -642,6 +687,22 @@ pub(crate) mod test {
                 },
                 half
             );
+        }
+
+        #[test]
+        fn test_near_zero_returns_true_when_all_components_are_close_to_0() {
+            let v = Vec3::ZERO;
+            assert!(v.near_zero());
+        }
+
+        #[test]
+        fn test_near_zero_returns_false_when_any_components_is_not_close_to_0() {
+            let v = Vec3 {
+                x: 0.1,
+                y: 0.0,
+                z: 0.0,
+            };
+            assert!(!v.near_zero());
         }
     }
 }
