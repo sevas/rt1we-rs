@@ -6,7 +6,7 @@ mod ppmio;
 mod ray;
 mod trig;
 
-use crate::geometry::{dot, lerp, Color, Point, Vec3, BLACK, WHITE};
+use crate::geometry::{dot, lerp, random_in_unit_sphere, Color, Point, Vec3, BLACK, WHITE};
 use crate::image::ImageRGBA;
 use crate::ppmio::ppmwrite;
 use crate::ray::Ray;
@@ -210,10 +210,27 @@ fn ray_color(r: &Ray) -> Color {
 }
 
 // Using a world of objects as input
-fn ray_color_2(r: &Ray, world: &HittableList) -> Color {
+fn ray_color_2(r: &Ray, world: &HittableList, depth: usize) -> Color {
     let mut rec = HitRecord::new();
+
+    if depth == 0 {
+        return Color {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        };
+    }
+
     if world.hit(&r, 0.0, f32::INFINITY, &mut rec) {
-        return 0.5 * (&rec.normal + &WHITE);
+        let target = rec.p + rec.normal + random_in_unit_sphere();
+        let new_ray = Ray {
+            orig: rec.p,
+            dir: target - rec.p,
+        };
+        return 0.5 * ray_color_2(&new_ray, &world, depth - 1);
+
+        // return normal as color
+        //return 0.5 * (&rec.normal + &WHITE);
     }
 
     // background sky
@@ -303,6 +320,8 @@ fn render() -> ImageRGBA {
     let aspect_ratio = 16.0 / 9.0;
     let width = 400;
     let height = (width as f32 / aspect_ratio) as usize;
+    let max_depth = 50;
+
     let mut im = ImageRGBA::new(width, height);
 
     // world
@@ -339,7 +358,7 @@ fn render() -> ImageRGBA {
                 let v = (j as f32 + rng.gen::<f32>()) / (im.height as f32 - 1.0);
 
                 let ray = cam.get_ray(u, v);
-                pixel_color = pixel_color + ray_color_2(&ray, &world);
+                pixel_color = pixel_color + ray_color_2(&ray, &world, max_depth);
             }
             //let pixel_color = ray_color(&ray);
             // let pixel_color = ray_color_2(&ray, &world);
@@ -358,5 +377,5 @@ fn render() -> ImageRGBA {
 
 fn main() {
     let im = render();
-    ppmwrite("out/image007.ppm", im);
+    ppmwrite("out/image008.ppm", im);
 }
