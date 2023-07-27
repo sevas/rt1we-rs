@@ -353,7 +353,7 @@ fn render() -> ImageRGBA {
     }
 
     println!("\nDone.");
-    im.into()
+    im
 }
 
 fn main() {
