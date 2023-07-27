@@ -6,10 +6,11 @@ mod ppmio;
 mod ray;
 mod trig;
 
-use crate::geometry::{dot, lerp, Color, Point, Vec3, WHITE};
+use crate::geometry::{dot, lerp, Color, Point, Vec3, BLACK, WHITE};
 use crate::image::ImageRGBA;
 use crate::ppmio::ppmwrite;
 use crate::ray::Ray;
+use rand::Rng;
 
 fn hit_sphere(center: &Point, radius: f32, r: &Ray) -> f32 {
     // Sphere hits are the points where:
@@ -229,6 +230,74 @@ fn ray_color_2(r: &Ray, world: &HittableList) -> Color {
     )
 }
 
+fn clamp(v: f32, lo: f32, hi: f32) -> f32 {
+    if v < lo {
+        return lo;
+    }
+    if v > hi {
+        return hi;
+    }
+    v
+}
+
+struct Camera {
+    origin: Point,
+    lower_left_corner: Point,
+    horizontal: Vec3,
+    vertical: Vec3,
+}
+
+impl Camera {
+    pub fn new() -> Self {
+        let aspect_ratio = 16.0 / 9.0;
+
+        let vp_height = 2.0;
+        let vp_width = aspect_ratio * vp_height;
+        let focal_length = 1.0;
+
+        let origin = Point {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        };
+        let horizontal = Vec3 {
+            x: vp_width,
+            y: 0.0,
+            z: 0.0,
+        };
+        let vertical = Vec3 {
+            x: 0.0,
+            y: vp_height,
+            z: 0.0,
+        };
+        let lower_left_corner = &origin
+            - &(horizontal / 2.0)
+            - (vertical / 2.0)
+            - Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: focal_length,
+            };
+
+        Camera {
+            origin,
+            lower_left_corner,
+            horizontal,
+            vertical,
+        }
+    }
+
+    pub fn get_ray(&self, u: f32, v: f32) -> Ray {
+        let dir =
+            &self.lower_left_corner + &(u * self.horizontal) + (v * self.vertical) - self.origin;
+
+        Ray {
+            orig: self.origin.clone(),
+            dir,
+        }
+    }
+}
+
 fn render() -> ImageRGBA {
     // image
     let aspect_ratio = 16.0 / 9.0;
@@ -255,50 +324,26 @@ fn render() -> ImageRGBA {
         radius: 100.0,
     });
 
-    // camera
-    let vp_height = 2.0;
-    let vp_width = aspect_ratio * vp_height;
-    let focal_length = 1.0;
+    let cam = Camera::new();
+    let samples_per_pixel = 100;
+    let mut rng = rand::thread_rng();
 
-    let origin = Point {
-        x: 0.0,
-        y: 0.0,
-        z: 0.0,
-    };
-    let horizontal = Vec3 {
-        x: vp_width,
-        y: 0.0,
-        z: 0.0,
-    };
-    let vertical = Vec3 {
-        x: 0.0,
-        y: vp_height,
-        z: 0.0,
-    };
-    let lower_left_corner = &origin
-        - &(horizontal / 2.0)
-        - (vertical / 2.0)
-        - Vec3 {
-            x: 0.0,
-            y: 0.0,
-            z: focal_length,
-        };
-
-    for j in (0..im.height) {
+    for j in (0..im.height).rev() {
         print!("\rScanlines remaining {j}");
 
         for i in 0..im.width {
-            let u = i as f32 / (im.width as f32 - 1.0);
-            let v = j as f32 / (im.height as f32 - 1.0);
-            let dir = &lower_left_corner + &(u * horizontal) + (v * vertical) - origin;
-            println!("ray dir for ({j} {i}): {dir:?}");
-            let ray = Ray {
-                orig: origin,
-                dir: dir,
-            };
-            //let pixel_color = ray_color(&ray);
-            let pixel_color = ray_color_2(&ray, &world);
+            let mut pixel_color = BLACK;
 
+            for s in 0..samples_per_pixel {
+                let u = (i as f32 + rng.gen::<f32>()) / (im.width as f32 - 1.0);
+                let v = (j as f32 + rng.gen::<f32>()) / (im.height as f32 - 1.0);
+
+                let ray = cam.get_ray(u, v);
+                pixel_color = pixel_color + ray_color_2(&ray, &world);
+            }
+            //let pixel_color = ray_color(&ray);
+            // let pixel_color = ray_color_2(&ray, &world);
+            pixel_color = pixel_color / samples_per_pixel as f32;
             let ir = (pixel_color.x * 255.0) as u8;
             let ig = (pixel_color.y * 255.0) as u8;
             let ib = (pixel_color.z * 255.0) as u8;
@@ -313,5 +358,5 @@ fn render() -> ImageRGBA {
 
 fn main() {
     let im = render();
-    ppmwrite("out/image006.ppm", im);
+    ppmwrite("out/image007.ppm", im);
 }
