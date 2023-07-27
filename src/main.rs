@@ -7,8 +7,8 @@ mod ray;
 mod trig;
 
 use crate::geometry::{
-    dot, lerp, random_in_hemisphere, random_in_unit_sphere, random_unit_vector, Color, Point, Vec3,
-    BLACK, WHITE,
+    dot, lerp, random_in_hemisphere, random_in_unit_sphere, random_unit_vector, reflect, Color,
+    Point, Vec3, BLACK, WHITE,
 };
 use crate::image::ImageRGBA;
 use crate::ppmio::ppmwrite;
@@ -61,6 +61,7 @@ fn hit_sphere2(center: &Point, radius: f32, r: &Ray) -> f32 {
 pub struct HitRecord {
     p: Point,
     normal: Vec3,
+    material_id: usize,
     t: f32,
     front_face: bool,
 }
@@ -73,6 +74,7 @@ impl HitRecord {
                 y: 0.0,
                 z: 0.0,
             },
+            material_id: 0,
             normal: Vec3::ZERO,
             t: 0.0,
             front_face: false,
@@ -88,6 +90,63 @@ impl HitRecord {
     }
 }
 
+/// Material scattering behaviour
+trait Material {
+    /// Scatter or absorb a ray.
+    ///
+    /// # Arguments
+    /// - `r_in` - Ray coming in the hit point
+    /// - `rec` - The hit record
+    /// - `attenuation` - How much the
+    /// - `scattered` - The output scattered ray
+    fn scatter(
+        &self, r_in: &Ray, rec: &mut HitRecord, attenuation: &mut Color, scattered: &mut Ray,
+    ) -> bool;
+}
+
+#[derive(Copy, Clone, Debug)]
+struct Lambertian {
+    albedo: Color,
+}
+
+impl Material for Lambertian {
+    fn scatter(
+        &self, r_in: &Ray, rec: &mut HitRecord, attenuation: &mut Color, scattered: &mut Ray,
+    ) -> bool {
+        let mut scatter_direction = rec.normal + random_unit_vector();
+        if scatter_direction.near_zero() {
+            scatter_direction = rec.normal;
+        }
+
+        *scattered = Ray {
+            orig: rec.p,
+            dir: scatter_direction,
+        };
+        *attenuation = self.albedo;
+        true
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
+struct Metal {
+    albedo: Color,
+}
+
+impl Material for Metal {
+    fn scatter(
+        &self, r_in: &Ray, rec: &mut HitRecord, attenuation: &mut Color, scattered: &mut Ray,
+    ) -> bool {
+        let reflected = reflect(&r_in.dir.normed(), &rec.normal);
+        *scattered = Ray {
+            orig: rec.p,
+            dir: reflected,
+        };
+        *attenuation = self.albedo;
+        let res = dot(&scattered.dir, &rec.normal) > 0.0;
+        res
+    }
+}
+
 trait Hittable {
     fn hit(self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool;
 }
@@ -96,6 +155,7 @@ trait Hittable {
 pub struct Sphere {
     center: Point,
     radius: f32,
+    material_id: usize,
 }
 
 impl Hittable for Sphere {
@@ -120,12 +180,10 @@ impl Hittable for Sphere {
             }
         }
 
-        // println!("ray hit sphere at {root}");
-
         rec.t = root;
         rec.p = r.at(root);
         let outward_normal = (rec.p - self.center) / self.radius;
-
+        rec.material_id = self.material_id;
         rec.set_face_normal(r, &outward_normal);
         true
     }
@@ -213,7 +271,9 @@ fn ray_color(r: &Ray) -> Color {
 }
 
 // Using a world of objects as input
-fn ray_color_2(r: &Ray, world: &HittableList, depth: usize) -> Color {
+fn ray_color_2(
+    r: &Ray, world: &HittableList, depth: usize, materials: &Vec<Box<dyn Material>>,
+) -> Color {
     let mut rec = HitRecord::new();
 
     if depth == 0 {
@@ -225,16 +285,31 @@ fn ray_color_2(r: &Ray, world: &HittableList, depth: usize) -> Color {
     }
 
     if world.hit(&r, 0.001, f32::INFINITY, &mut rec) {
-        //let target = rec.p + rec.normal + random_unit_vector();
-        let target = rec.p + random_in_hemisphere(&rec.normal);
-
-        let new_ray = Ray {
-            orig: rec.p,
-            dir: target - rec.p,
+        // --- using materials
+        let mut scattered = Ray {
+            orig: Vec3::ZERO,
+            dir: Vec3::UNIT_Y,
         };
-        return 0.5 * ray_color_2(&new_ray, &world, depth - 1);
+        let mut attenuation = BLACK;
 
-        // return normal as color
+        let cont =
+            materials[rec.material_id].scatter(r, &mut rec, &mut attenuation, &mut scattered);
+
+        if (cont) {
+            return attenuation * ray_color_2(&scattered, world, depth - 1, &materials);
+        } else {
+            return BLACK;
+        }
+        // --- simple lanmbertian
+        // let target = rec.p + rec.normal + random_unit_vector();
+        // //let target = rec.p + random_in_hemisphere(&rec.normal);
+        // let new_ray = Ray {
+        //     orig: rec.p,
+        //     dir: target - rec.p,
+        // };
+        // return 0.5 * ray_color_2(&new_ray, &world, depth - 1);
+
+        // --- return normal as color
         //return 0.5 * (&rec.normal + &WHITE);
     }
 
@@ -329,6 +404,42 @@ fn render() -> ImageRGBA {
 
     let mut im = ImageRGBA::new(width, height);
 
+    // auto material_ground = make_shared<lambertian>(color(0.8, 0.8, 0.0));
+    // auto material_center = make_shared<lambertian>(color(0.7, 0.3, 0.3));
+    // auto material_left   = make_shared<metal>(color(0.8, 0.8, 0.8));
+    // auto material_right  = make_shared<metal>(color(0.8, 0.6, 0.2));
+
+    let mut materials: Vec<Box<dyn Material>> = Vec::new();
+
+    materials.push(Box::new(Lambertian {
+        albedo: Color {
+            x: 0.8,
+            y: 0.8,
+            z: 0.0,
+        },
+    }));
+    materials.push(Box::new(Lambertian {
+        albedo: Color {
+            x: 0.7,
+            y: 0.3,
+            z: 0.3,
+        },
+    }));
+    materials.push(Box::new(Metal {
+        albedo: Color {
+            x: 0.8,
+            y: 0.8,
+            z: 0.8,
+        },
+    }));
+    materials.push(Box::new(Metal {
+        albedo: Color {
+            x: 0.8,
+            y: 0.6,
+            z: 0.2,
+        },
+    }));
+
     // world
     let mut world = HittableList::new();
     world.add(&Sphere {
@@ -338,6 +449,25 @@ fn render() -> ImageRGBA {
             z: -1.0,
         },
         radius: 0.5,
+        material_id: 1,
+    });
+    world.add(&Sphere {
+        center: Point {
+            x: 1.0,
+            y: 0.0,
+            z: -1.0,
+        },
+        radius: 0.5,
+        material_id: 2,
+    });
+    world.add(&Sphere {
+        center: Point {
+            x: -1.0,
+            y: 0.0,
+            z: -1.0,
+        },
+        radius: 0.5,
+        material_id: 3,
     });
     world.add(&Sphere {
         center: Point {
@@ -346,6 +476,7 @@ fn render() -> ImageRGBA {
             z: -1.0,
         },
         radius: 100.0,
+        material_id: 0,
     });
 
     let cam = Camera::new();
@@ -364,7 +495,7 @@ fn render() -> ImageRGBA {
                 let v = (j as f32 + rng.gen::<f32>()) / (im.height as f32 - 1.0);
 
                 let ray = cam.get_ray(u, v);
-                pixel_color = pixel_color + ray_color_2(&ray, &world, max_depth);
+                pixel_color = pixel_color + ray_color_2(&ray, &world, max_depth, &materials);
             }
             pixel_color = pixel_color / samples_per_pixel as f32;
 
@@ -389,5 +520,5 @@ fn render() -> ImageRGBA {
 
 fn main() {
     let im = render();
-    ppmwrite("out/image012.ppm", im);
+    ppmwrite("out/image013.ppm", im);
 }
