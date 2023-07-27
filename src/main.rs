@@ -69,11 +69,7 @@ pub struct HitRecord {
 impl HitRecord {
     pub fn new() -> Self {
         HitRecord {
-            p: Point {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            },
+            p: Point { x: 0.0, y: 0.0, z: 0.0 },
             material_id: 0,
             normal: Vec3::ZERO,
             t: 0.0,
@@ -118,10 +114,7 @@ impl Material for Lambertian {
             scatter_direction = rec.normal;
         }
 
-        *scattered = Ray {
-            orig: rec.p,
-            dir: scatter_direction,
-        };
+        *scattered = Ray { orig: rec.p, dir: scatter_direction };
         *attenuation = self.albedo;
         true
     }
@@ -138,10 +131,7 @@ impl Material for Metal {
         &self, r_in: &Ray, rec: &mut HitRecord, attenuation: &mut Color, scattered: &mut Ray,
     ) -> bool {
         let reflected = reflect(&r_in.dir.normed(), &rec.normal);
-        *scattered = Ray {
-            orig: rec.p,
-            dir: reflected + self.fuzz * random_in_unit_sphere(),
-        };
+        *scattered = Ray { orig: rec.p, dir: reflected + self.fuzz * random_in_unit_sphere() };
         *attenuation = self.albedo;
         let res = dot(&scattered.dir, &rec.normal) > 0.0;
         res
@@ -196,9 +186,7 @@ pub struct HittableList {
 
 impl HittableList {
     pub fn new() -> Self {
-        HittableList {
-            objects: Vec::new(),
-        }
+        HittableList { objects: Vec::new() }
     }
 
     pub fn clear(&mut self) {
@@ -230,45 +218,18 @@ impl HittableList {
 
 /// Using single sphere as input
 fn ray_color(r: &Ray) -> Color {
-    let t = hit_sphere2(
-        &Point {
-            x: 0.0,
-            y: 0.0,
-            z: -1.0,
-        },
-        0.5,
-        r,
-    );
+    let t = hit_sphere2(&Point { x: 0.0, y: 0.0, z: -1.0 }, 0.5, r);
 
     if t > 0.0 {
         // println!("ray hit sphere at {t}");
 
-        let n = (r.at(t)
-            - Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: -1.0,
-            })
-        .normed();
-        return 0.5
-            * Color {
-                x: n.x + 1.0,
-                y: n.y + 1.0,
-                z: n.z + 1.0,
-            };
+        let n = (r.at(t) - Vec3 { x: 0.0, y: 0.0, z: -1.0 }).normed();
+        return 0.5 * Color { x: n.x + 1.0, y: n.y + 1.0, z: n.z + 1.0 };
     }
 
     let unit_direction = &r.dir.normed();
     let t = 0.5 * (unit_direction.y + 1.0);
-    lerp(
-        &WHITE,
-        &Color {
-            x: 0.5,
-            y: 0.7,
-            z: 1.0,
-        },
-        t,
-    )
+    lerp(&WHITE, &Color { x: 0.5, y: 0.7, z: 1.0 }, t)
 }
 
 // Using a world of objects as input
@@ -278,19 +239,12 @@ fn ray_color_2(
     let mut rec = HitRecord::new();
 
     if depth == 0 {
-        return Color {
-            x: 0.0,
-            y: 0.0,
-            z: 0.0,
-        };
+        return Color { x: 0.0, y: 0.0, z: 0.0 };
     }
 
     if world.hit(&r, 0.001, f32::INFINITY, &mut rec) {
         // --- using materials
-        let mut scattered = Ray {
-            orig: Vec3::ZERO,
-            dir: Vec3::UNIT_Y,
-        };
+        let mut scattered = Ray { orig: Vec3::ZERO, dir: Vec3::UNIT_Y };
         let mut attenuation = BLACK;
 
         let cont =
@@ -317,15 +271,7 @@ fn ray_color_2(
     // background sky
     let unit_direction = &r.dir.normed();
     let t = 0.5 * (unit_direction.y + 1.0);
-    lerp(
-        &WHITE,
-        &Color {
-            x: 0.5,
-            y: 0.7,
-            z: 1.0,
-        },
-        t,
-    )
+    lerp(&WHITE, &Color { x: 0.5, y: 0.7, z: 1.0 }, t)
 }
 
 fn clamp(v: f32, lo: f32, hi: f32) -> f32 {
@@ -353,46 +299,22 @@ impl Camera {
         let vp_width = aspect_ratio * vp_height;
         let focal_length = 1.0;
 
-        let origin = Point {
-            x: 0.0,
-            y: 0.0,
-            z: 0.0,
-        };
-        let horizontal = Vec3 {
-            x: vp_width,
-            y: 0.0,
-            z: 0.0,
-        };
-        let vertical = Vec3 {
-            x: 0.0,
-            y: vp_height,
-            z: 0.0,
-        };
+        let origin = Point { x: 0.0, y: 0.0, z: 0.0 };
+        let horizontal = Vec3 { x: vp_width, y: 0.0, z: 0.0 };
+        let vertical = Vec3 { x: 0.0, y: vp_height, z: 0.0 };
         let lower_left_corner = &origin
             - &(horizontal / 2.0)
             - (vertical / 2.0)
-            - Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: focal_length,
-            };
+            - Vec3 { x: 0.0, y: 0.0, z: focal_length };
 
-        Camera {
-            origin,
-            lower_left_corner,
-            horizontal,
-            vertical,
-        }
+        Camera { origin, lower_left_corner, horizontal, vertical }
     }
 
     pub fn get_ray(&self, u: f32, v: f32) -> Ray {
         let dir =
             &self.lower_left_corner + &(u * self.horizontal) + (v * self.vertical) - self.origin;
 
-        Ray {
-            orig: self.origin.clone(),
-            dir,
-        }
+        Ray { orig: self.origin.clone(), dir }
     }
 }
 
@@ -404,80 +326,20 @@ fn render() -> ImageRGBA {
     let max_depth = 50;
 
     let mut im = ImageRGBA::new(width, height);
-
-    // auto material_ground = make_shared<lambertian>(color(0.8, 0.8, 0.0));
-    // auto material_center = make_shared<lambertian>(color(0.7, 0.3, 0.3));
-    // auto material_left   = make_shared<metal>(color(0.8, 0.8, 0.8));
-    // auto material_right  = make_shared<metal>(color(0.8, 0.6, 0.2));
-
     let mut materials: Vec<Box<dyn Material>> = Vec::new();
 
-    materials.push(Box::new(Lambertian {
-        albedo: Color {
-            x: 0.8,
-            y: 0.8,
-            z: 0.0,
-        },
-    }));
-    materials.push(Box::new(Lambertian {
-        albedo: Color {
-            x: 0.7,
-            y: 0.3,
-            z: 0.3,
-        },
-    }));
-    materials.push(Box::new(Metal {
-        albedo: Color {
-            x: 0.8,
-            y: 0.8,
-            z: 0.8,
-        },
-        fuzz: 0.3,
-    }));
-    materials.push(Box::new(Metal {
-        albedo: Color {
-            x: 0.8,
-            y: 0.6,
-            z: 0.2,
-        },
-        fuzz: 1.0,
-    }));
+    materials.push(Box::new(Lambertian { albedo: Color { x: 0.8, y: 0.8, z: 0.0 } }));
+    materials.push(Box::new(Lambertian { albedo: Color { x: 0.7, y: 0.3, z: 0.3 } }));
+    materials.push(Box::new(Metal { albedo: Color { x: 0.8, y: 0.8, z: 0.8 }, fuzz: 0.3 }));
+    materials.push(Box::new(Metal { albedo: Color { x: 0.8, y: 0.6, z: 0.2 }, fuzz: 1.0 }));
 
     // world
     let mut world = HittableList::new();
+    world.add(&Sphere { center: Point { x: 0.0, y: 0.0, z: -1.0 }, radius: 0.5, material_id: 1 });
+    world.add(&Sphere { center: Point { x: -1.0, y: 0.0, z: -1.0 }, radius: 0.5, material_id: 2 });
+    world.add(&Sphere { center: Point { x: 1.0, y: 0.0, z: -1.0 }, radius: 0.5, material_id: 3 });
     world.add(&Sphere {
-        center: Point {
-            x: 0.0,
-            y: 0.0,
-            z: -1.0,
-        },
-        radius: 0.5,
-        material_id: 1,
-    });
-    world.add(&Sphere {
-        center: Point {
-            x: -1.0,
-            y: 0.0,
-            z: -1.0,
-        },
-        radius: 0.5,
-        material_id: 2,
-    });
-    world.add(&Sphere {
-        center: Point {
-            x: 1.0,
-            y: 0.0,
-            z: -1.0,
-        },
-        radius: 0.5,
-        material_id: 3,
-    });
-    world.add(&Sphere {
-        center: Point {
-            x: 0.0,
-            y: -100.5,
-            z: -1.0,
-        },
+        center: Point { x: 0.0, y: -100.5, z: -1.0 },
         radius: 100.0,
         material_id: 0,
     });
@@ -503,11 +365,8 @@ fn render() -> ImageRGBA {
             pixel_color = pixel_color / samples_per_pixel as f32;
 
             // color correct for gamma=2.0
-            let pixel_color_corrected = Vec3 {
-                x: pixel_color.x.sqrt(),
-                y: pixel_color.y.sqrt(),
-                z: pixel_color.z.sqrt(),
-            };
+            let pixel_color_corrected =
+                Vec3 { x: pixel_color.x.sqrt(), y: pixel_color.y.sqrt(), z: pixel_color.z.sqrt() };
             // gamma correction
             let ir = (clamp(pixel_color_corrected.x, 0.0, 0.999) * 256.0) as u8;
             let ig = (clamp(pixel_color_corrected.y, 0.0, 0.999) * 256.0) as u8;

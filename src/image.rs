@@ -11,11 +11,7 @@ impl ImageRGBA {
         let sz = width * height * 4;
         let mut pixels = vec![0u8; sz];
         ImageRGBA::init(&mut pixels);
-        ImageRGBA {
-            width,
-            height,
-            pixels,
-        }
+        ImageRGBA { width, height, pixels }
     }
 
     fn init(pixels: &mut Vec<u8>) {
@@ -32,12 +28,7 @@ impl ImageRGBA {
     pub fn at(&self, i: usize, j: usize) -> (u8, u8, u8, u8) {
         let idx = (j * self.width as usize + i) * 4usize;
 
-        (
-            self.pixels[idx],
-            self.pixels[idx + 1],
-            self.pixels[idx + 2],
-            self.pixels[idx + 3],
-        )
+        (self.pixels[idx], self.pixels[idx + 1], self.pixels[idx + 2], self.pixels[idx + 3])
     }
 
     pub fn at_u32(&self, i: usize, j: usize) -> u32 {
