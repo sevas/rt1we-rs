@@ -75,7 +75,7 @@ impl HitRecord {
         }
     }
     pub fn set_face_normal(&mut self, r: &Ray, outward_normal: &Vec3) {
-        self.front_face = dot(&self.normal, &outward_normal) < 0.0;
+        self.front_face = dot(&r.dir, &outward_normal) < 0.0;
         if self.front_face {
             self.normal = outward_normal.clone();
         } else {
@@ -84,14 +84,18 @@ impl HitRecord {
     }
 }
 
+trait Hittable {
+    fn hit(self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool;
+}
+
 #[derive(Copy, Clone)]
 pub struct Sphere {
     center: Point,
     radius: f32,
 }
 
-impl Sphere {
-    pub fn hit(self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
+impl Hittable for Sphere {
+    fn hit(self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
         let oc = &r.orig - &self.center;
         let a = r.dir.len_squared();
         let half_b = dot(&oc, &r.dir);
@@ -112,9 +116,12 @@ impl Sphere {
             }
         }
 
+        // println!("ray hit sphere at {root}");
+
         rec.t = root;
         rec.p = r.at(root);
         let outward_normal = (rec.p - self.center) / self.radius;
+
         rec.set_face_normal(r, &outward_normal);
         true
     }
@@ -125,6 +132,12 @@ pub struct HittableList {
 }
 
 impl HittableList {
+    pub fn new() -> Self {
+        HittableList {
+            objects: Vec::new(),
+        }
+    }
+
     pub fn clear(&mut self) {
         self.objects.clear()
     }
@@ -133,13 +146,15 @@ impl HittableList {
         self.objects.push((*object).into());
     }
 
-    pub fn hit(self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
+    pub fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
         let mut temp_rec = HitRecord::new();
         let mut hit_anything = false;
         let mut closest_so_far = t_max;
 
-        for each in self.objects {
-            if each.hit(r, t_min, t_max, &mut temp_rec) {
+        for each in &self.objects {
+            // println!("trying to hit sphere at {0:?}", each.center);
+            if each.hit(r, t_min, closest_so_far, &mut temp_rec) {
+                // println!("hit at {0}", temp_rec.t);
                 hit_anything = true;
                 closest_so_far = temp_rec.t;
                 *rec = temp_rec.clone();
@@ -150,6 +165,7 @@ impl HittableList {
     }
 }
 
+/// Using single sphere as input
 fn ray_color(r: &Ray) -> Color {
     let t = hit_sphere2(
         &Point {
@@ -162,6 +178,8 @@ fn ray_color(r: &Ray) -> Color {
     );
 
     if t > 0.0 {
+        // println!("ray hit sphere at {t}");
+
         let n = (r.at(t)
             - Vec3 {
                 x: 0.0,
@@ -176,6 +194,7 @@ fn ray_color(r: &Ray) -> Color {
                 z: n.z + 1.0,
             };
     }
+
     let unit_direction = &r.dir.normed();
     let t = 0.5 * (unit_direction.y + 1.0);
     lerp(
@@ -185,7 +204,28 @@ fn ray_color(r: &Ray) -> Color {
             y: 0.7,
             z: 1.0,
         },
-        1.0 - t,
+        t,
+    )
+}
+
+// Using a world of objects as input
+fn ray_color_2(r: &Ray, world: &HittableList) -> Color {
+    let mut rec = HitRecord::new();
+    if world.hit(&r, 0.0, f32::INFINITY, &mut rec) {
+        return 0.5 * (&rec.normal + &WHITE);
+    }
+
+    // background sky
+    let unit_direction = &r.dir.normed();
+    let t = 0.5 * (unit_direction.y + 1.0);
+    lerp(
+        &WHITE,
+        &Color {
+            x: 0.5,
+            y: 0.7,
+            z: 1.0,
+        },
+        t,
     )
 }
 
@@ -195,6 +235,25 @@ fn render() -> ImageRGBA {
     let width = 400;
     let height = (width as f32 / aspect_ratio) as usize;
     let mut im = ImageRGBA::new(width, height);
+
+    // world
+    let mut world = HittableList::new();
+    world.add(&Sphere {
+        center: Point {
+            x: 0.0,
+            y: 0.0,
+            z: -1.0,
+        },
+        radius: 0.5,
+    });
+    world.add(&Sphere {
+        center: Point {
+            x: 0.0,
+            y: -100.5,
+            z: -1.0,
+        },
+        radius: 100.0,
+    });
 
     // camera
     let vp_height = 2.0;
@@ -225,17 +284,21 @@ fn render() -> ImageRGBA {
             z: focal_length,
         };
 
-    for j in (0..im.height).rev() {
+    for j in (0..im.height) {
         print!("\rScanlines remaining {j}");
 
         for i in 0..im.width {
             let u = i as f32 / (im.width as f32 - 1.0);
             let v = j as f32 / (im.height as f32 - 1.0);
+            let dir = &lower_left_corner + &(u * horizontal) + (v * vertical) - origin;
+            println!("ray dir for ({j} {i}): {dir:?}");
             let ray = Ray {
                 orig: origin,
-                dir: &lower_left_corner + &(horizontal * u) + (vertical * v) - origin,
+                dir: dir,
             };
-            let pixel_color = ray_color(&ray);
+            //let pixel_color = ray_color(&ray);
+            let pixel_color = ray_color_2(&ray, &world);
+
             let ir = (pixel_color.x * 255.0) as u8;
             let ig = (pixel_color.y * 255.0) as u8;
             let ib = (pixel_color.z * 255.0) as u8;
@@ -250,5 +313,5 @@ fn render() -> ImageRGBA {
 
 fn main() {
     let im = render();
-    ppmwrite("out/image005.ppm", im);
+    ppmwrite("out/image006.ppm", im);
 }
