@@ -360,12 +360,18 @@ fn render() -> ImageRGBA {
                 let ray = cam.get_ray(u, v);
                 pixel_color = pixel_color + ray_color_2(&ray, &world, max_depth);
             }
-            //let pixel_color = ray_color(&ray);
-            // let pixel_color = ray_color_2(&ray, &world);
             pixel_color = pixel_color / samples_per_pixel as f32;
-            let ir = (pixel_color.x * 255.0) as u8;
-            let ig = (pixel_color.y * 255.0) as u8;
-            let ib = (pixel_color.z * 255.0) as u8;
+
+            // color correct for gamma=2.0
+            let pixel_color_corrected = Vec3 {
+                x: pixel_color.x.sqrt(),
+                y: pixel_color.y.sqrt(),
+                z: pixel_color.z.sqrt(),
+            };
+            // gamma correction
+            let ir = (clamp(pixel_color_corrected.x, 0.0, 0.999) * 256.0) as u8;
+            let ig = (clamp(pixel_color_corrected.y, 0.0, 0.999) * 256.0) as u8;
+            let ib = (clamp(pixel_color_corrected.z, 0.0, 0.999) * 256.0) as u8;
 
             im.put(i, j, ir, ig, ib, 255);
         }
@@ -377,5 +383,5 @@ fn render() -> ImageRGBA {
 
 fn main() {
     let im = render();
-    ppmwrite("out/image008.ppm", im);
+    ppmwrite("out/image009.ppm", im);
 }
