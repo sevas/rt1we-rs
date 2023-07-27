@@ -77,9 +77,22 @@ impl ImageRGBA {
     }
 }
 
+pub fn flipv(im: &ImageRGBA) -> ImageRGBA {
+    let mut out = ImageRGBA::new(im.width, im.height);
+
+    for j in 0..im.height {
+        for i in 0..im.width {
+            let px = im.at_u32(i, j);
+            out.put_u32(i, im.height - 1 - j, px);
+        }
+    }
+
+    out
+}
+
 #[cfg(test)]
 pub(crate) mod test {
-    use crate::image::ImageRGBA;
+    use crate::image::{flipv, ImageRGBA};
 
     #[test]
     fn test_new_image_is_dark_gray() {
@@ -129,5 +142,31 @@ pub(crate) mod test {
         assert_eq!(g, 0);
         assert_eq!(b, 0);
         assert_eq!(a, 255);
+    }
+
+    #[test]
+    fn test_flipv() {
+        let mut im = ImageRGBA::new(3, 3);
+
+        im.put_u32(0, 0, 0x000001ff);
+        im.put_u32(1, 0, 0x000002ff);
+        im.put_u32(2, 0, 0x000003ff);
+        im.put_u32(0, 1, 0x000004ff);
+        im.put_u32(1, 1, 0x000005ff);
+        im.put_u32(2, 1, 0x000006ff);
+        im.put_u32(0, 2, 0x000007ff);
+        im.put_u32(1, 2, 0x000008ff);
+        im.put_u32(2, 2, 0x000009ff);
+
+        let im_flipped = flipv(&im);
+        assert_eq!(im_flipped.at_u32(0, 0), 0x000007ff);
+        assert_eq!(im_flipped.at_u32(1, 0), 0x000008ff);
+        assert_eq!(im_flipped.at_u32(2, 0), 0x000009ff);
+        assert_eq!(im_flipped.at_u32(0, 1), 0x000004ff);
+        assert_eq!(im_flipped.at_u32(1, 1), 0x000005ff);
+        assert_eq!(im_flipped.at_u32(2, 1), 0x000006ff);
+        assert_eq!(im_flipped.at_u32(0, 2), 0x000001ff);
+        assert_eq!(im_flipped.at_u32(1, 2), 0x000002ff);
+        assert_eq!(im_flipped.at_u32(2, 2), 0x000003ff);
     }
 }
