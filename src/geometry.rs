@@ -119,6 +119,10 @@ pub fn random_in_unit_sphere() -> Vec3 {
     }
 }
 
+pub fn random_unit_vector() -> Vec3 {
+    random_in_unit_sphere().normed()
+}
+
 impl ops::Add for Vec3 {
     type Output = Vec3;
     fn add(self, other: Vec3) -> Vec3 {
