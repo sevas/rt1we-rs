@@ -20,3 +20,12 @@ jobs:
       run: cargo build --verbose
     - name: Run tests
       run: cargo test --verbose
+    - name: render image
+      run: |
+        mkdir out 
+        cargo run
+    - name: upload last render
+      uses: actions/upload-artifact@v3
+      with:
+        name: renders
+        paths: out/
