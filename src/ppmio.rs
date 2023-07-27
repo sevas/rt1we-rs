@@ -1,4 +1,4 @@
-use crate::image::ImageRGBA;
+use crate::image::{flipv, ImageRGBA};
 use std::fs::File;
 use std::io::{BufWriter, Write};
 
@@ -9,6 +9,7 @@ pub fn ppmwrite(fname: &str, im: ImageRGBA) {
     let h = im.height;
     let header = format!("P3\n{w} {h}\n255\n");
 
+    let im = flipv(&im);
     f.write_all(header.as_bytes())
         .expect("unable to write data");
     let count = w * h;
