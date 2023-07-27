@@ -123,6 +123,16 @@ pub fn random_unit_vector() -> Vec3 {
     random_in_unit_sphere().normed()
 }
 
+// older method
+pub fn random_in_hemisphere(normal: &Vec3) -> Vec3 {
+    let in_unit_sphere = random_in_unit_sphere();
+    if dot(&in_unit_sphere, &normal) > 0.0 {
+        return in_unit_sphere;
+    } else {
+        return -in_unit_sphere;
+    }
+}
+
 impl ops::Add for Vec3 {
     type Output = Vec3;
     fn add(self, other: Vec3) -> Vec3 {

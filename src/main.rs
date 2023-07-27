@@ -6,7 +6,10 @@ mod ppmio;
 mod ray;
 mod trig;
 
-use crate::geometry::{dot, lerp, random_unit_vector, Color, Point, Vec3, BLACK, WHITE};
+use crate::geometry::{
+    dot, lerp, random_in_hemisphere, random_in_unit_sphere, random_unit_vector, Color, Point, Vec3,
+    BLACK, WHITE,
+};
 use crate::image::ImageRGBA;
 use crate::ppmio::ppmwrite;
 use crate::ray::Ray;
@@ -222,7 +225,9 @@ fn ray_color_2(r: &Ray, world: &HittableList, depth: usize) -> Color {
     }
 
     if world.hit(&r, 0.001, f32::INFINITY, &mut rec) {
-        let target = rec.p + rec.normal + random_unit_vector();
+        //let target = rec.p + rec.normal + random_unit_vector();
+        let target = rec.p + random_in_hemisphere(&rec.normal);
+
         let new_ray = Ray {
             orig: rec.p,
             dir: target - rec.p,
@@ -384,5 +389,5 @@ fn render() -> ImageRGBA {
 
 fn main() {
     let im = render();
-    ppmwrite("out/image011.ppm", im);
+    ppmwrite("out/image012.ppm", im);
 }
