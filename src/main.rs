@@ -361,41 +361,47 @@ impl Camera {
 /// - `samples_per_pixel` - How many random rays to generate and average to compute final pixel color.
 fn render(width: usize, height: usize, max_depth: usize, samples_per_pixel: usize) -> ImageRGBA {
     let mut im = ImageRGBA::new(width, height);
-    let mut materials: Vec<Box<dyn Material>> = Vec::new();
+    let materials: Vec<Box<dyn Material>> = vec![
+        Box::new(Lambertian { albedo: Color { x: 0.8, y: 0.8, z: 0.0 } }),
+        Box::new(Lambertian { albedo: Color { x: 0.7, y: 0.3, z: 0.3 } }),
+        Box::new(Metal { albedo: Color { x: 0.8, y: 0.8, z: 0.8 }, fuzz: 0.3 }),
+        Box::new(Metal { albedo: Color { x: 0.8, y: 0.6, z: 0.2 }, fuzz: 1.0 }),
+        Box::new(Dieletric { refraction_index: 1.5 }),
+        Box::new(Dieletric { refraction_index: 1.5 }),
+    ];
 
-    materials.push(Box::new(Lambertian { albedo: Color { x: 0.8, y: 0.8, z: 0.0 } }));
-    // materials.push(Box::new(Lambertian { albedo: Color { x: 0.7, y: 0.3, z: 0.3 } }));
-    // materials.push(Box::new(Metal { albedo: Color { x: 0.8, y: 0.8, z: 0.8 }, fuzz: 0.3 }));
-    materials.push(Box::new(Dieletric { refraction_index: 1.5 }));
-    materials.push(Box::new(Dieletric { refraction_index: 1.5 }));
-    materials.push(Box::new(Metal { albedo: Color { x: 0.8, y: 0.6, z: 0.2 }, fuzz: 1.0 }));
-
-    let lambertian_index = 0;
-    let dielectric_index = 1;
-    let dielectric2_index = 2;
-    let metal_index = 3;
+    let lambertian_green_index = 0;
+    let lambertian_pink_index = 1;
+    let metal_shiny_index = 2;
+    let metal_fuzzy_index = 3;
+    let dielectric_index = 4;
+    let dielectric2_index = 5;
 
     // world
     let mut world = HittableList::new();
+    // center sphere
     world.add(&Sphere {
         center: Point { x: 0.0, y: 0.0, z: -1.0 },
         radius: 0.5,
         material_id: dielectric_index,
     });
+    // // left sphere
     // world.add(&Sphere {
     //     center: Point { x: -1.0, y: 0.0, z: -1.0 },
     //     radius: 0.5,
     //     material_id: dielectric2_index,
     // });
+    // // right sphere
     // world.add(&Sphere {
     //     center: Point { x: 1.0, y: 0.0, z: -1.0 },
     //     radius: 0.5,
-    //     material_id: metal_index,
+    //     material_id: lambertian_orange_index,
     // });
+    // ground sphere
     world.add(&Sphere {
         center: Point { x: 0.0, y: -100.5, z: -1.0 },
         radius: 100.0,
-        material_id: lambertian_index,
+        material_id: lambertian_green_index,
     });
 
     let cam = Camera::new();
@@ -409,7 +415,7 @@ fn render(width: usize, height: usize, max_depth: usize, samples_per_pixel: usiz
             println!("=========== BEGIN rendering pixel at [{i}, {j}]");
             let mut pixel_color = Color::BLACK;
 
-            for s in 0..samples_per_pixel {
+            for _ in 0..samples_per_pixel {
                 let u = (i as f32 + rng.gen::<f32>()) / (im.width as f32 - 1.0);
                 let v = (j as f32 + rng.gen::<f32>()) / (im.height as f32 - 1.0);
 
@@ -421,7 +427,7 @@ fn render(width: usize, height: usize, max_depth: usize, samples_per_pixel: usiz
             // color correct for gamma=2.0
             let pixel_color_corrected =
                 Vec3 { x: pixel_color.x.sqrt(), y: pixel_color.y.sqrt(), z: pixel_color.z.sqrt() };
-            // gamma correction
+
             let ir = (clamp(pixel_color_corrected.x, 0.0, 0.999) * 256.0) as u8;
             let ig = (clamp(pixel_color_corrected.y, 0.0, 0.999) * 256.0) as u8;
             let ib = (clamp(pixel_color_corrected.z, 0.0, 0.999) * 256.0) as u8;
