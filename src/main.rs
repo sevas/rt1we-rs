@@ -1,4 +1,4 @@
-//! Toy raytracer, following `<https://github.com/RayTracing/raytracing.github.io/>`
+//! Toy raytracer, following the [Raytracer in One Weekend](https://github.com/RayTracing/raytracing.github.io/) Series.
 //!
 //! This module implements the main render loop and scene management. Might refactor later.
 #[macro_use]
@@ -10,8 +10,8 @@ mod ray;
 mod trig;
 
 use crate::geometry::{
-    dot, lerp, random_in_hemisphere, random_in_unit_sphere, random_unit_vector, reflect, refract,
-    Color, Point, Vec3, BLACK, WHITE,
+    dot, lerp, random_in_unit_sphere, random_unit_vector, reflect, refract, Color, Point, Vec3,
+    BLACK, WHITE,
 };
 use crate::image::{flipv, ImageRGBA};
 use crate::ppmio::ppmwrite;

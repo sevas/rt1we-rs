@@ -1,7 +1,7 @@
 //! Read and Write functions for raw PPM images.
 //!
 //! We only support the legacy format with 'P3' magic number.
-//! Details for this format: `<https://netpbm.sourceforge.net/doc/ppm.html>`
+//! Details for this format can be read on the [netpbm documentation](https://netpbm.sourceforge.net/doc/ppm.html)
 use crate::image::ImageRGBA;
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Write};
