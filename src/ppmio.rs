@@ -50,7 +50,7 @@ pub fn ppmwrite(fpath: &str, im: &ImageRGBA) {
 /// r g b
 /// EOF
 /// ```
-pub fn ppmread(fname: &str) -> ImageRGBA {
+pub fn ppmread(fpath: &str) -> ImageRGBA {
     let f = File::open(fpath).expect("Unable to open file");
     let mut f = BufReader::new(f);
 
