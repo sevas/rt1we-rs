@@ -94,6 +94,13 @@ pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
     v - &(2.0 * &(dot(&n, &v) * n))
 }
 
+pub fn refract(uv: &Vec3, n: &Vec3, etai_over_etat: f32) -> Vec3 {
+    let cos_theta = dot(&-uv, n).min(1.0);
+    let r_out_perp = etai_over_etat * (uv + &(cos_theta * n));
+    let r_out_parallel = (1.0 - r_out_perp.len_squared()).abs().sqrt() * -1.0 * n;
+    r_out_perp + r_out_parallel
+}
+
 // older method
 pub fn random_in_hemisphere(normal: &Vec3) -> Vec3 {
     let in_unit_sphere = random_in_unit_sphere();
@@ -298,7 +305,7 @@ pub const YELLOW: Color = Color { x: 242.0 / 255.0, y: 190.0 / 255.0, z: 34.0 / 
 #[cfg(test)]
 pub(crate) mod test {
     mod vec3 {
-        use crate::geometry::lerp;
+        use crate::geometry::{lerp, reflect, refract};
         use crate::Vec3;
 
         #[test]
@@ -440,6 +447,36 @@ pub(crate) mod test {
         fn test_near_zero_returns_false_when_any_components_is_not_close_to_0() {
             let v = Vec3 { x: 0.1, y: 0.0, z: 0.0 };
             assert!(!v.near_zero());
+        }
+
+        #[test]
+        fn test_reflect() {
+            let v = Vec3 { x: 1.0, y: -1.0, z: 0.0 }.normed();
+            let n = Vec3::UNIT_Y;
+
+            let reflected = reflect(&v, &n);
+            let expected = Vec3 { x: 1.0, y: 1.0, z: 0.0 }.normed();
+            assert_eq!(expected, reflected);
+        }
+
+        #[test]
+        fn test_refract_with_air_refraction_coefficient_returns_same_vector() {
+            let v = Vec3 { x: 1.0, y: -1.0, z: 0.0 }.normed();
+            let n = Vec3::UNIT_Y;
+
+            let refracted = refract(&v, &n, 1.0);
+            let expected = Vec3 { x: 1.0, y: -1.0, z: 0.0 }.normed();
+            assert_eq!(expected, refracted);
+        }
+
+        #[test]
+        fn test_refract_with_glass_refraction_coefficient_returns_refracted_vector() {
+            let v = Vec3 { x: 1.0, y: -1.0, z: 0.0 }.normed();
+            let n = Vec3::UNIT_Y;
+
+            let refracted = refract(&v, &n, 1.3);
+            let expected = Vec3 { x: 0.91923875, y: -0.39370057, z: 0.0 };
+            assert_eq!(expected, refracted);
         }
     }
 }
