@@ -7,8 +7,8 @@ mod ray;
 mod trig;
 
 use crate::geometry::{
-    dot, lerp, random_in_hemisphere, random_in_unit_sphere, random_unit_vector, reflect, Color,
-    Point, Vec3, BLACK, WHITE,
+    dot, lerp, random_in_hemisphere, random_in_unit_sphere, random_unit_vector, reflect, refract,
+    Color, Point, Vec3, BLACK, WHITE,
 };
 use crate::image::ImageRGBA;
 use crate::ppmio::ppmwrite;
@@ -75,6 +75,10 @@ impl Material for Lambertian {
 
         *scattered = Ray { orig: rec.p, dir: scatter_direction };
         *attenuation = self.albedo;
+        println!(
+            "[mat=lambertian] IN: {0:?}  OUT: {1:?}  ATT: {2:?}",
+            &rec.normal, scatter_direction, attenuation
+        );
         true
     }
 }
@@ -94,6 +98,36 @@ impl Material for Metal {
         *attenuation = self.albedo;
         let res = dot(&scattered.dir, &rec.normal) > 0.0;
         res
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
+struct Dieletric {
+    refraction_index: f32,
+}
+
+// attenuation = color(1.0, 1.0, 1.0);
+//             double refraction_ratio = rec.front_face ? (1.0/ir) : ir;
+//
+//             vec3 unit_direction = unit_vector(r_in.direction());
+//             vec3 refracted = refract(unit_direction, rec.normal, refraction_ratio);
+//
+//             scattered = ray(rec.p, refracted);
+//             return true;
+
+impl Material for Dieletric {
+    fn scatter(
+        &self, r_in: &Ray, rec: &mut HitRecord, attenuation: &mut Color, scattered: &mut Ray,
+    ) -> bool {
+        *attenuation = WHITE;
+        let refraction_ratio =
+            if rec.front_face { 1.0 / self.refraction_index } else { self.refraction_index };
+        let unit_dir = r_in.dir.normed();
+        let refracted = refract(&unit_dir, &rec.normal, refraction_ratio);
+        *scattered = Ray { orig: rec.p, dir: refracted };
+        println!("[mat=dielectric] IN: {unit_dir:?} OUT: {refracted:?}");
+
+        true
     }
 }
 
@@ -162,9 +196,7 @@ impl HittableList {
         let mut closest_so_far = t_max;
 
         for each in &self.objects {
-            // println!("trying to hit sphere at {0:?}", each.center);
             if each.hit(r, t_min, closest_so_far, &mut temp_rec) {
-                // println!("hit at {0}", temp_rec.t);
                 hit_anything = true;
                 closest_so_far = temp_rec.t;
                 *rec = temp_rec.clone();
@@ -198,6 +230,7 @@ fn ray_color_2(
     let mut rec = HitRecord::new();
 
     if depth == 0 {
+        println!("[depth=0]!!! depth limit reached");
         return Color { x: 0.0, y: 0.0, z: 0.0 };
     }
 
@@ -206,15 +239,21 @@ fn ray_color_2(
         let mut scattered = Ray { orig: Vec3::ZERO, dir: Vec3::UNIT_Y };
         let mut attenuation = BLACK;
 
-        let cont =
+        let was_scattered =
             materials[rec.material_id].scatter(r, &mut rec, &mut attenuation, &mut scattered);
 
-        if (cont) {
-            return attenuation * ray_color_2(&scattered, world, depth - 1, &materials);
+        println!("[depth={depth}]was scattered?  {was_scattered}");
+        println!("[depth={depth}]attenuation?  {attenuation:?}");
+        return if was_scattered {
+            let px_color = ray_color_2(&scattered, world, depth - 1, &materials);
+            println!("[depth={depth}]px_color {px_color:?}");
+            attenuation * px_color
+            // attenuation * ray_color_2(&scattered, world, depth - 1, &materials)
         } else {
-            return BLACK;
-        }
-        // --- simple lanmbertian
+            // Color { x: 128.0 / 255.0, y: 0.0, z: 0.0 }
+            BLACK
+        };
+        // --- simple lambertian
         // let target = rec.p + rec.normal + random_unit_vector();
         // //let target = rec.p + random_in_hemisphere(&rec.normal);
         // let new_ray = Ray {
@@ -228,6 +267,7 @@ fn ray_color_2(
     }
 
     // background sky
+    println!("Hit the sky");
     let unit_direction = &r.dir.normed();
     let t = 0.5 * (unit_direction.y + 1.0);
     lerp(&WHITE, &Color { x: 0.5, y: 0.7, z: 1.0 }, t)
@@ -277,41 +317,50 @@ impl Camera {
     }
 }
 
-fn render() -> ImageRGBA {
-    // image
-    let aspect_ratio = 16.0 / 9.0;
-    let width = 400;
-    let height = (width as f32 / aspect_ratio) as usize;
-    let max_depth = 50;
-
+fn render(width: usize, height: usize, max_depth: usize, samples_per_pixel: usize) -> ImageRGBA {
     let mut im = ImageRGBA::new(width, height);
     let mut materials: Vec<Box<dyn Material>> = Vec::new();
 
     materials.push(Box::new(Lambertian { albedo: Color { x: 0.8, y: 0.8, z: 0.0 } }));
-    materials.push(Box::new(Lambertian { albedo: Color { x: 0.7, y: 0.3, z: 0.3 } }));
-    materials.push(Box::new(Metal { albedo: Color { x: 0.8, y: 0.8, z: 0.8 }, fuzz: 0.3 }));
+    // materials.push(Box::new(Lambertian { albedo: Color { x: 0.7, y: 0.3, z: 0.3 } }));
+    // materials.push(Box::new(Metal { albedo: Color { x: 0.8, y: 0.8, z: 0.8 }, fuzz: 0.3 }));
+    materials.push(Box::new(Dieletric { refraction_index: 1.5 }));
+    materials.push(Box::new(Dieletric { refraction_index: 1.5 }));
     materials.push(Box::new(Metal { albedo: Color { x: 0.8, y: 0.6, z: 0.2 }, fuzz: 1.0 }));
+
+    let lambertian_index = 0;
+    let dielectric_index = 1;
+    let dielectric2_index = 2;
+    let metal_index = 3;
 
     // world
     let mut world = HittableList::new();
-    world.add(&Sphere { center: Point { x: 0.0, y: 0.0, z: -1.0 }, radius: 0.5, material_id: 1 });
-    world.add(&Sphere { center: Point { x: -1.0, y: 0.0, z: -1.0 }, radius: 0.5, material_id: 2 });
-    world.add(&Sphere { center: Point { x: 1.0, y: 0.0, z: -1.0 }, radius: 0.5, material_id: 3 });
+    world.add(&Sphere {
+        center: Point { x: 0.0, y: 0.0, z: -1.0 },
+        radius: 0.5,
+        material_id: dielectric_index,
+    });
+    world.add(&Sphere {
+        center: Point { x: -1.0, y: 0.0, z: -1.0 },
+        radius: 0.5,
+        material_id: dielectric2_index,
+    });
+    //world.add(&Sphere { center: Point { x: 1.0, y: 0.0, z: -1.0 }, radius: 0.5, material_id: metal_index });
     world.add(&Sphere {
         center: Point { x: 0.0, y: -100.5, z: -1.0 },
         radius: 100.0,
-        material_id: 0,
+        material_id: lambertian_index,
     });
 
     let cam = Camera::new();
-    let samples_per_pixel = 100;
     let mut rng = rand::thread_rng();
     println!("\n\n--- Starting render");
 
     for j in (0..im.height).rev() {
-        print!("\rScanlines remaining {j}");
+        //print!("\rScanlines remaining {j}");
 
         for i in 0..im.width {
+            println!("=========== BEGIN rendering pixel at [{i}, {j}]");
             let mut pixel_color = BLACK;
 
             for s in 0..samples_per_pixel {
@@ -331,19 +380,31 @@ fn render() -> ImageRGBA {
             let ig = (clamp(pixel_color_corrected.y, 0.0, 0.999) * 256.0) as u8;
             let ib = (clamp(pixel_color_corrected.z, 0.0, 0.999) * 256.0) as u8;
 
+            println!("=========== DONE  rendering pixel at [{i}, {j}]");
+
             im.put(i, j, ir, ig, ib, 255);
         }
     }
-
-    println!("\n---Done.");
     im
 }
 
 fn main() {
+    let aspect_ratio = 16.0 / 9.0;
+    let width = 10;
+    let height = (width as f32 / aspect_ratio) as usize;
+    let max_depth = 5;
+
+    let samples_per_pixel = 1;
+
     let start = Instant::now();
-    let im = render();
+    let im = render(width, height, max_depth, samples_per_pixel);
     let elapsed = start.elapsed();
-    println!("Time elapsed: {elapsed:?}");
+
+    println!("=============== Summary");
+    println!("Time elapsed   : {elapsed:?}");
+    println!("Image size     : {width}x{height}");
+    println!("Max ray depth  : {max_depth}");
+    println!("#Samples/px    : {samples_per_pixel}");
 
     ppmwrite("out/image015.ppm", &im);
     ppmwrite("out/latest.ppm", &im);
