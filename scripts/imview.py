@@ -74,6 +74,7 @@ if __name__ == '__main__':
     # Contrast/color control
     hist = pg.HistogramLUTItem()
     hist.setImageItem(img)
+    hist.setLevelMode("rgba")
     win.addItem(hist)
 
     # Draggable line for setting isocurve level
