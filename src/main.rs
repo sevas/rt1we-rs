@@ -14,6 +14,7 @@ use crate::image::ImageRGBA;
 use crate::ppmio::ppmwrite;
 use crate::ray::{hit_sphere2, Ray};
 use rand::Rng;
+use std::time::Instant;
 
 #[derive(Copy, Clone)]
 pub struct HitRecord {
@@ -339,6 +340,11 @@ fn render() -> ImageRGBA {
 }
 
 fn main() {
+    let start = Instant::now();
     let im = render();
-    ppmwrite("out/image014.ppm", im);
+    let elapsed = start.elapsed();
+    println!("Time elapsed: {elapsed:?}");
+
+    ppmwrite("out/image015.ppm", &im);
+    ppmwrite("out/latest.ppm", &im);
 }
