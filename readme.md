@@ -1,8 +1,16 @@
-
 # rt1we-rs
 
-raytracer in one weekend, in rust.
+![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/sevas/rt1we-rs/rust.yml)
+
+
+Raytracer in one weekend, in rust.
 
 https://github.com/RayTracing/raytracing.github.io/
 
-Just a toy project for educational purpose.
+This is a toy project for educational purpose. 
+Don't expect anything mindblowing. Just simple code from first principles. 
+
+## python tools
+
+- `scripts/ppm2png.py`: convert a folder of ppm files to png
+- `scripts/imview.py`: [pyqtgraph](https://pyqtgraph.readthedocs.io/en/latest/)-based viewer for image files. Image will be updated every time the file is changed. 
