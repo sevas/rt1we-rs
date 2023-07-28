@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 assert_float_eq="1"
 rand="0.8"
+tempfile = "3.5.0"
