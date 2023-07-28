@@ -11,7 +11,6 @@ mod trig;
 
 use crate::geometry::{
     dot, lerp, random_in_unit_sphere, random_unit_vector, reflect, refract, Color, Point, Vec3,
-    BLACK, WHITE,
 };
 use crate::image::{flipv, ImageRGBA};
 use crate::ppmio::ppmwrite;
@@ -126,7 +125,7 @@ impl Material for Dieletric {
     fn scatter(
         &self, r_in: &Ray, rec: &mut HitRecord, attenuation: &mut Color, scattered: &mut Ray,
     ) -> bool {
-        *attenuation = WHITE;
+        *attenuation = Color::WHITE;
         let refraction_ratio =
             if rec.front_face { 1.0 / self.refraction_index } else { self.refraction_index };
         let unit_dir = r_in.dir.normed();
@@ -242,7 +241,7 @@ fn ray_color(r: &Ray) -> Color {
 
     let unit_direction = &r.dir.normed();
     let t = 0.5 * (unit_direction.y + 1.0);
-    lerp(&WHITE, &Color { x: 0.5, y: 0.7, z: 1.0 }, t)
+    lerp(&Color::WHITE, &Color { x: 0.5, y: 0.7, z: 1.0 }, t)
 }
 
 /// Cast a single ray in the scene and return the computed pixel color.
@@ -273,7 +272,7 @@ fn ray_color_2(
     if world.hit(&r, 0.001, f32::INFINITY, &mut rec) {
         // --- using materials
         let mut scattered = Ray { orig: Vec3::ZERO, dir: Vec3::UNIT_Y };
-        let mut attenuation = BLACK;
+        let mut attenuation = Color::BLACK;
 
         let was_scattered =
             materials[rec.material_id].scatter(r, &mut rec, &mut attenuation, &mut scattered);
@@ -287,7 +286,7 @@ fn ray_color_2(
             // attenuation * ray_color_2(&scattered, world, depth - 1, &materials)
         } else {
             // Color { x: 128.0 / 255.0, y: 0.0, z: 0.0 }
-            BLACK
+            Color::BLACK
         };
         // --- simple lambertian
         // let target = rec.p + rec.normal + random_unit_vector();
@@ -306,7 +305,7 @@ fn ray_color_2(
     println!("Hit the sky");
     let unit_direction = &r.dir.normed();
     let t = 0.5 * (unit_direction.y + 1.0);
-    lerp(&WHITE, &Color { x: 0.5, y: 0.7, z: 1.0 }, t)
+    lerp(&Color::WHITE, &Color { x: 0.5, y: 0.7, z: 1.0 }, t)
 }
 
 fn clamp(v: f32, lo: f32, hi: f32) -> f32 {
@@ -409,7 +408,7 @@ fn render(width: usize, height: usize, max_depth: usize, samples_per_pixel: usiz
 
         for i in 0..im.width {
             println!("=========== BEGIN rendering pixel at [{i}, {j}]");
-            let mut pixel_color = BLACK;
+            let mut pixel_color = Color::BLACK;
 
             for s in 0..samples_per_pixel {
                 let u = (i as f32 + rng.gen::<f32>()) / (im.width as f32 - 1.0);

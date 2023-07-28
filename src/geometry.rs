@@ -295,13 +295,15 @@ pub fn make_color_from_u8(r: u8, g: u8, b: u8) -> Color {
     Color { x: r as f32 / 255.0, y: g as f32 / 255.0, z: b as f32 / 255.0 }
 }
 
-pub const RED: Color = Color { x: 200.0 / 255.0, y: 0.0 / 255.0, z: 0.0 / 255.0 };
-pub const GREEN: Color = Color { x: 0.0 / 255.0, y: 200.0 / 255.0, z: 0.0 / 255.0 };
-pub const BLUE: Color = Color { x: 0.0 / 255.0, y: 0.0 / 255.0, z: 200.0 / 255.0 };
-pub const WHITE: Color = Color { x: 255.0 / 255.0, y: 255.0 / 255.0, z: 255.0 / 255.0 };
-pub const BLACK: Color = Color { x: 0.0 / 255.0, y: 0.0 / 255.0, z: 0.0 / 255.0 };
-pub const CYAN: Color = Color { x: 34.0 / 255.0, y: 166.0 / 255.0, z: 153.0 / 255.0 };
-pub const YELLOW: Color = Color { x: 242.0 / 255.0, y: 190.0 / 255.0, z: 34.0 / 255.0 };
+impl Color {
+    pub const RED: Color = Color { x: 200.0 / 255.0, y: 0.0 / 255.0, z: 0.0 / 255.0 };
+    pub const GREEN: Color = Color { x: 0.0 / 255.0, y: 200.0 / 255.0, z: 0.0 / 255.0 };
+    pub const BLUE: Color = Color { x: 0.0 / 255.0, y: 0.0 / 255.0, z: 200.0 / 255.0 };
+    pub const WHITE: Color = Color { x: 255.0 / 255.0, y: 255.0 / 255.0, z: 255.0 / 255.0 };
+    pub const BLACK: Color = Color { x: 0.0 / 255.0, y: 0.0 / 255.0, z: 0.0 / 255.0 };
+    pub const CYAN: Color = Color { x: 34.0 / 255.0, y: 166.0 / 255.0, z: 153.0 / 255.0 };
+    pub const YELLOW: Color = Color { x: 242.0 / 255.0, y: 190.0 / 255.0, z: 34.0 / 255.0 };
+}
 
 #[cfg(test)]
 pub(crate) mod test {
