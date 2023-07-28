@@ -10,7 +10,7 @@ use crate::geometry::{
     dot, lerp, random_in_hemisphere, random_in_unit_sphere, random_unit_vector, reflect, refract,
     Color, Point, Vec3, BLACK, WHITE,
 };
-use crate::image::ImageRGBA;
+use crate::image::{flipv, ImageRGBA};
 use crate::ppmio::ppmwrite;
 use crate::ray::{hit_sphere2, Ray};
 use rand::Rng;
@@ -406,6 +406,7 @@ fn main() {
     println!("Max ray depth  : {max_depth}");
     println!("#Samples/px    : {samples_per_pixel}");
 
+    let im = flipv(&im);
     ppmwrite("out/image015.ppm", &im);
     ppmwrite("out/latest.ppm", &im);
 }
