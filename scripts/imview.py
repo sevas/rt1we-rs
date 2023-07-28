@@ -63,7 +63,7 @@ if __name__ == "__main__":
 
     pg.mkQApp()
 
-    win = pg.GraphicsLayoutWidget(size=(800, 450))
+    win = pg.GraphicsLayoutWidget(size=(880, 600))
 
     win.setWindowTitle("simple image viewer")
     win.setWindowIcon(QtGui.QIcon(str(THIS_DIR / "icon.ico")))
@@ -75,20 +75,15 @@ if __name__ == "__main__":
     # Item for displaying image data
     img = pg.ImageItem()
     p1.addItem(img)
-    img.setImage(image=np.flipud(data))
 
     # Contrast/color control
-    hist = pg.HistogramLUTItem()
+    hist = pg.HistogramLUTItem(gradientPosition="left")
     hist.setImageItem(img)
     hist.setLevelMode("rgba")
     win.addItem(hist)
 
-    # Draggable line for setting isocurve level
-    isoLine = pg.InfiniteLine(angle=0, movable=True, pen="g")
-    hist.vb.addItem(isoLine)
-    hist.vb.setMouseEnabled(y=False)  # makes user interaction a little easier
-    isoLine.setValue(0.8)
-    isoLine.setZValue(1000)  # bring iso line above contrast controls
+    img.setImage(image=np.flipud(data))
+    hist.setLevels(data.min(), data.max())
 
     img.hoverEvent = imageHoverEvent
 
