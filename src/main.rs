@@ -258,7 +258,6 @@ fn ray_color(r: &Ray) -> Color {
 /// - `world` - The list of object we can hit.
 /// - `depth` - Remaining amount of ray bounces.
 /// - `materials` - The collection of materials used in the scene.
-
 fn ray_color_2(
     r: &Ray, world: &HittableList, depth: usize, materials: &Vec<Box<dyn Material>>,
 ) -> Color {
@@ -269,7 +268,7 @@ fn ray_color_2(
         return Color { x: 0.0, y: 0.0, z: 0.0 };
     }
 
-    if world.hit(&r, 0.001, f32::INFINITY, &mut rec) {
+    if world.hit(r, 0.001, f32::INFINITY, &mut rec) {
         // --- using materials
         let mut scattered = Ray { orig: Vec3::ZERO, dir: Vec3::UNIT_Y };
         let mut attenuation = Color::BLACK;
@@ -337,8 +336,8 @@ impl Camera {
         let origin = Point { x: 0.0, y: 0.0, z: 0.0 };
         let horizontal = Vec3 { x: vp_width, y: 0.0, z: 0.0 };
         let vertical = Vec3 { x: 0.0, y: vp_height, z: 0.0 };
-        let lower_left_corner = &origin
-            - &(horizontal / 2.0)
+        let lower_left_corner = origin
+            - (horizontal / 2.0)
             - (vertical / 2.0)
             - Vec3 { x: 0.0, y: 0.0, z: focal_length };
 
@@ -347,7 +346,7 @@ impl Camera {
 
     pub fn get_ray(&self, u: f32, v: f32) -> Ray {
         let dir =
-            &self.lower_left_corner + &(u * self.horizontal) + (v * self.vertical) - self.origin;
+            self.lower_left_corner + (u * self.horizontal) + (v * self.vertical) - self.origin;
 
         Ray { orig: self.origin.clone(), dir }
     }
