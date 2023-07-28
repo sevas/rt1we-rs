@@ -1,10 +1,23 @@
+//! Read and Write functions for raw PPM images.
+//!
+//! We only support the legacy format with 'P3' magic number.
+//! Details for this format: `<https://netpbm.sourceforge.net/doc/ppm.html>`
 use crate::image::ImageRGBA;
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::str::FromStr;
 
-pub fn ppmwrite(fname: &str, im: &ImageRGBA) {
-    let f = File::create(fname).expect("Unable to create file");
+/// Write an image as PPM file.
+///
+/// # Arguments
+/// - `fpath` - The file path to write to.
+/// - `im` - The image data to write.
+///
+/// # Notes
+/// The alpha channel is dropped.
+///
+pub fn ppmwrite(fpath: &str, im: &ImageRGBA) {
+    let f = File::create(fpath).expect("Unable to create file");
     let mut f = BufWriter::new(f);
     let w = im.width;
     let h = im.height;
@@ -21,21 +34,24 @@ pub fn ppmwrite(fname: &str, im: &ImageRGBA) {
     }
 }
 
+/// Read a PPM image.
 ///
-/// # Header
+/// # Arguments
+/// - `fpath` - File path of the file to read.
+///
+/// # File structrure
 /// ```
 /// P3
 /// $width $height
 /// $maxval
-/// r b g r g b r g b
-/// r g b r g b r g b
+/// r b g
+/// r g b
 /// ...
-/// r g b r g b r g b
+/// r g b
 /// EOF
-///
 /// ```
 pub fn ppmread(fname: &str) -> ImageRGBA {
-    let f = File::open(fname).expect("Unable to open file");
+    let f = File::open(fpath).expect("Unable to open file");
     let mut f = BufReader::new(f);
 
     let mut magic_bytes = String::new();
@@ -81,6 +97,8 @@ pub(crate) mod test {
         im.put_u32(2, 2, 0x0F0A0AFF);
 
         let fpath = "/tmp/rt1wk-rs_im.ppm";
+        // let file = NamedTempFile::new()?;
+        // let fpath = file.into_temp_path();
         ppmwrite(fpath, &im);
 
         let im_r = ppmread(fpath);

@@ -1,3 +1,6 @@
+//! Toy raytracer, following `<https://github.com/RayTracing/raytracing.github.io/>`
+//!
+//! This module implements the main render loop and scene management. Might refactor later.
 #[macro_use]
 extern crate assert_float_eq;
 mod geometry;
@@ -16,6 +19,7 @@ use crate::ray::{hit_sphere2, Ray};
 use rand::Rng;
 use std::time::Instant;
 
+/// Define a single ray-to-object hit.
 #[derive(Copy, Clone)]
 pub struct HitRecord {
     p: Point,
@@ -45,7 +49,7 @@ impl HitRecord {
     }
 }
 
-/// Material scattering behaviour
+/// Material scattering behaviour.
 trait Material {
     /// Scatter or absorb a ray.
     ///
@@ -59,6 +63,7 @@ trait Material {
     ) -> bool;
 }
 
+/// Lambertian (diffuse) material.
 #[derive(Copy, Clone, Debug)]
 struct Lambertian {
     albedo: Color,
@@ -83,6 +88,7 @@ impl Material for Lambertian {
     }
 }
 
+/// Shiny metal (reflective) material.
 #[derive(Copy, Clone, Debug)]
 struct Metal {
     albedo: Color,
@@ -101,6 +107,7 @@ impl Material for Metal {
     }
 }
 
+/// Refractive material.
 #[derive(Copy, Clone, Debug)]
 struct Dieletric {
     refraction_index: f32,
@@ -131,10 +138,13 @@ impl Material for Dieletric {
     }
 }
 
+/// Trait for objects we can hit with a ray.
 trait Hittable {
+    ///
     fn hit(self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool;
 }
 
+/// Sphere object description.
 #[derive(Copy, Clone)]
 pub struct Sphere {
     center: Point,
@@ -173,6 +183,7 @@ impl Hittable for Sphere {
     }
 }
 
+/// Collection of object that can be hit by a ray.
 pub struct HittableList {
     objects: Vec<Sphere>,
 }
@@ -186,10 +197,21 @@ impl HittableList {
         self.objects.clear()
     }
 
+    /// Add an object to the list.
+    ///
+    /// # Arguments
+    /// - `object` - The object to add.
     pub fn add(&mut self, object: &Sphere) {
         self.objects.push((*object).into());
     }
 
+    /// Process a single ray cast.
+    ///
+    /// # Arguments
+    /// - `r` - The ray.
+    /// - `t_min` - Minimum distance for which the ray cast is considered a valid hit.
+    /// - `t_max` - Maximum distance for which the ray cast is considered a valid hit.
+    /// - `rec` - Keep track of the hit properties.
     pub fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
         let mut temp_rec = HitRecord::new();
         let mut hit_anything = false;
@@ -223,7 +245,21 @@ fn ray_color(r: &Ray) -> Color {
     lerp(&WHITE, &Color { x: 0.5, y: 0.7, z: 1.0 }, t)
 }
 
-// Using a world of objects as input
+/// Cast a single ray in the scene and return the computed pixel color.
+///
+/// This is a recursive function. As long as a hit produces a scattered ray, the function
+/// will be called again with that new ray, until we reach `depth=0` or we have no more
+/// scattering ray.
+///
+/// If no object is hit, we just return a *sky* color, which is a gradient modulated by the
+/// ray direction.
+///
+/// # Arguments
+/// - `r` - The ray.
+/// - `world` - The list of object we can hit.
+/// - `depth` - Remaining amount of ray bounces.
+/// - `materials` - The collection of materials used in the scene.
+
 fn ray_color_2(
     r: &Ray, world: &HittableList, depth: usize, materials: &Vec<Box<dyn Material>>,
 ) -> Color {
@@ -283,6 +319,7 @@ fn clamp(v: f32, lo: f32, hi: f32) -> f32 {
     v
 }
 
+/// Represent a camera.
 struct Camera {
     origin: Point,
     lower_left_corner: Point,
@@ -317,6 +354,13 @@ impl Camera {
     }
 }
 
+/// Set up a scene a render an image.
+///
+/// # Arguments
+/// - `width` - Output image width
+/// - `height` - Output image height
+/// - `max_depth` - Maximum number of ray bounces after a hit.
+/// - `samples_per_pixel` - How many random rays to generate and average to compute final pixel color.
 fn render(width: usize, height: usize, max_depth: usize, samples_per_pixel: usize) -> ImageRGBA {
     let mut im = ImageRGBA::new(width, height);
     let mut materials: Vec<Box<dyn Material>> = Vec::new();
@@ -340,12 +384,16 @@ fn render(width: usize, height: usize, max_depth: usize, samples_per_pixel: usiz
         radius: 0.5,
         material_id: dielectric_index,
     });
-    world.add(&Sphere {
-        center: Point { x: -1.0, y: 0.0, z: -1.0 },
-        radius: 0.5,
-        material_id: dielectric2_index,
-    });
-    //world.add(&Sphere { center: Point { x: 1.0, y: 0.0, z: -1.0 }, radius: 0.5, material_id: metal_index });
+    // world.add(&Sphere {
+    //     center: Point { x: -1.0, y: 0.0, z: -1.0 },
+    //     radius: 0.5,
+    //     material_id: dielectric2_index,
+    // });
+    // world.add(&Sphere {
+    //     center: Point { x: 1.0, y: 0.0, z: -1.0 },
+    //     radius: 0.5,
+    //     material_id: metal_index,
+    // });
     world.add(&Sphere {
         center: Point { x: 0.0, y: -100.5, z: -1.0 },
         radius: 100.0,

@@ -1,8 +1,9 @@
+//! 3D geometry functions and data structures.
 use rand::Rng;
 use std::ops;
 
 #[derive(Debug, Copy, Clone)]
-/// Vec3 representation
+/// Vec3 representation.
 pub struct Vec3 {
     pub x: f32,
     pub y: f32,

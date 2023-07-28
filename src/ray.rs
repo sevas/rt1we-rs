@@ -1,3 +1,4 @@
+//! Ray casting functions and data strutures.
 use crate::geometry::{dot, Point, Vec3};
 
 #[derive(Debug)]

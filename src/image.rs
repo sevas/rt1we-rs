@@ -1,8 +1,9 @@
+//! Image functions and data structures.
 #[derive(Debug)]
+/// Container for a 2D image with 4 channels.
 pub struct ImageRGBA {
     pub width: usize,
     pub height: usize,
-
     pub pixels: Vec<u8>,
 }
 

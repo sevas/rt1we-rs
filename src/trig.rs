@@ -1,3 +1,4 @@
+//! Trigonometry functions and datastructures.
 const PI: f32 = std::f32::consts::PI;
 const INF: f32 = f32::INFINITY;
 
