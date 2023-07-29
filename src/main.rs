@@ -462,3 +462,22 @@ fn main() {
     ppmwrite("out/image015.ppm", &im);
     ppmwrite("out/latest.ppm", &im);
 }
+
+
+
+#[cfg(test)]
+pub(crate) mod test {
+    use crate::image::ImageRGBA;
+    use crate::render;
+
+    #[test]
+    fn test_nominal_render(){
+        let im = render(16, 9, 5, 1);
+        let default_img = ImageRGBA::new(16, 9);
+
+        assert_eq!(im.width, 16);
+        assert_eq!(im.height, 9);
+
+    }
+
+}
