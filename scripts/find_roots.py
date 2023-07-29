@@ -1,9 +1,12 @@
 import math as m
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
-
-sns.set()
+try:
+    # optional, just used for better default figure style
+    import seaborn as sns
+    sns.set()
+except ImportError:
+    sns = None
 
 
 def quadratic_func(a, b, c, xs):

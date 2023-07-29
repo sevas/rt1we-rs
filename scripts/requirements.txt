@@ -1,0 +1,5 @@
+pyqtgraph
+imageio
+numpy
+matplotlib
+seaborn   # optional
