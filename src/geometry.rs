@@ -298,7 +298,7 @@ impl Color {
     pub const RED: Color = Color { x: 200.0 / 255.0, y: 0.0 / 255.0, z: 0.0 / 255.0 };
     pub const GREEN: Color = Color { x: 0.0 / 255.0, y: 200.0 / 255.0, z: 0.0 / 255.0 };
     pub const BLUE: Color = Color { x: 0.0 / 255.0, y: 0.0 / 255.0, z: 200.0 / 255.0 };
-    pub const WHITE: Color = Color { x: 255.0 / 255.0, y: 255.0 / 255.0, z: 255.0 / 255.0 };
+    pub const WHITE: Color = Color { x: 1.0, y: 1.0, z: 1.0 };
     pub const BLACK: Color = Color { x: 0.0 / 255.0, y: 0.0 / 255.0, z: 0.0 / 255.0 };
     pub const CYAN: Color = Color { x: 34.0 / 255.0, y: 166.0 / 255.0, z: 153.0 / 255.0 };
     pub const YELLOW: Color = Color { x: 242.0 / 255.0, y: 190.0 / 255.0, z: 34.0 / 255.0 };
@@ -311,7 +311,20 @@ pub(crate) mod test {
         use crate::Vec3;
 
         #[test]
-        fn test_add() {
+        fn test_default_vec3_is_all_zeros() {
+            assert_eq!(Vec3::new(), Vec3::ZERO);
+        }
+
+        #[test]
+        fn test_random_vector_has_values_in_0_1_range() {
+            let rand_vec3 = Vec3::random();
+            assert!(rand_vec3.x >= 0.0 && rand_vec3.x <= 1.0);
+            assert!(rand_vec3.y >= 0.0 && rand_vec3.y <= 1.0);
+            assert!(rand_vec3.z >= 0.0 && rand_vec3.z <= 1.0);
+        }
+
+        #[test]
+        fn test_add_operator_sums_vec_components() {
             let p = Vec3 { x: 1.0, y: 2.0, z: 3.0 };
             let q = Vec3 { x: 4.0, y: 5.0, z: 6.0 };
 
