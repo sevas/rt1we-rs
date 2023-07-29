@@ -49,6 +49,13 @@ impl Vec3 {
         Vec3 { x: self.x / len, y: self.y / len, z: self.z / len }
     }
 
+    pub fn norm(&mut self) {
+        let len = self.len();
+        self.x /= len;
+        self.y /= len;
+        self.z /= len;
+    }
+
     /// Returns a random vector with values in the `[0;1]` range.
     pub fn random() -> Vec3 {
         let mut rng = rand::thread_rng();
@@ -405,6 +412,15 @@ pub(crate) mod test {
             let expected = Vec3 { x: 1.0 / sz, y: 2.0 / sz, z: 3.0 / sz };
             assert_eq!(expected, pn);
             assert!(f32::abs(pn.len() - 1.0) < f32::EPSILON);
+        }
+
+        #[test]
+        fn test_norm_vec_in_place() {
+            let mut p = Vec3 { x: 12.0, y: 45.0, z: 1.0 };
+            assert!(p.len() > 1.0);
+
+            p.norm();
+            assert_f32_near!(p.len(), 1.0);
         }
 
         #[test]
