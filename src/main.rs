@@ -385,18 +385,18 @@ fn render(width: usize, height: usize, max_depth: usize, samples_per_pixel: usiz
         radius: 0.5,
         material_id: dielectric_index,
     });
-    // // left sphere
-    // world.add(&Sphere {
-    //     center: Point { x: -1.0, y: 0.0, z: -1.0 },
-    //     radius: 0.5,
-    //     material_id: dielectric2_index,
-    // });
-    // // right sphere
-    // world.add(&Sphere {
-    //     center: Point { x: 1.0, y: 0.0, z: -1.0 },
-    //     radius: 0.5,
-    //     material_id: lambertian_orange_index,
-    // });
+    // left sphere
+    world.add(&Sphere {
+        center: Point { x: -1.0, y: 0.0, z: -1.0 },
+        radius: 0.5,
+        material_id: metal_shiny_index,
+    });
+    // right sphere
+    world.add(&Sphere {
+        center: Point { x: 1.0, y: 0.0, z: -1.0 },
+        radius: 0.5,
+        material_id: lambertian_pink_index,
+    });
     // ground sphere
     world.add(&Sphere {
         center: Point { x: 0.0, y: -100.5, z: -1.0 },
@@ -442,7 +442,7 @@ fn render(width: usize, height: usize, max_depth: usize, samples_per_pixel: usiz
 
 fn main() {
     let aspect_ratio = 16.0 / 9.0;
-    let width = 10;
+    let width = 16;
     let height = (width as f32 / aspect_ratio) as usize;
     let max_depth = 5;
 
