@@ -90,15 +90,18 @@ pub fn ppmread(fpath: &str) -> ImageRGBA {
 pub(crate) mod test {
     use crate::image::ImageRGBA;
     use crate::ppmio::{ppmread, ppmwrite};
+    use std::env;
 
     #[test]
     fn test_read_write_roundtrip() {
         let mut im = ImageRGBA::new(5, 3);
         im.put_u32(2, 2, 0x0F0A0AFF);
 
-        let fpath = "/tmp/rt1wk-rs_im.ppm";
-        // let file = NamedTempFile::new()?;
-        // let fpath = file.into_temp_path();
+
+        let temp_dir = env::temp_dir();
+        let temp_path = temp_dir.join("rt1wk-rs_im.ppm");
+        let fpath = temp_path.as_path().to_str().expect("invalid path").clone();
+
         ppmwrite(fpath, &im);
 
         let im_r = ppmread(fpath);
