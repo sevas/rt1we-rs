@@ -301,7 +301,7 @@ fn ray_color_2(
     }
 
     // background sky
-    println!("Hit the sky");
+    println!("[depth={depth}] Hit the sky");
     let unit_direction = &r.dir.normed();
     let t = 0.5 * (unit_direction.y + 1.0);
     lerp(&Color::WHITE, &Color { x: 0.5, y: 0.7, z: 1.0 }, t)
