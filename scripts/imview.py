@@ -23,11 +23,11 @@ def imageHoverEvent(event):
     if isinstance(val, np.ndarray):
         p1.setTitle(
             "pos: (%0.1f, %0.1f)  pixel: (%d, %d)  value: [%.3g %.3g %.3g]"
-            % (x, y, i, j, val[0], val[1], val[2])
+            % (y, x, j, i, val[0], val[1], val[2])
         )
     else:
         p1.setTitle(
-            "pos: (%0.1f, %0.1f)  pixel: (%d, %d)  value: %.3g" % (x, y, i, j, val)
+            "pos: (%0.1f, %0.1f)  pixel: (%d, %d)  value: %.3g" % (y, x, j, i, val)
         )
 
 
