@@ -35,14 +35,6 @@ impl Vec3 {
         Vec3 { x: py * qz - pz * qy, y: pz * qx - px * qz, z: px * qy - py * qx }
     }
 
-    pub fn add(&self, other: &Vec3) -> Vec3 {
-        Vec3 { x: self.x + other.x, y: self.y + other.y, z: self.z + other.z }
-    }
-
-    pub fn mul(&self, s: f32) -> Vec3 {
-        Vec3 { x: self.x * s, y: self.y * s, z: self.z * s }
-    }
-
     pub fn len_squared(&self) -> f32 {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
