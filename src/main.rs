@@ -440,6 +440,7 @@ fn render(width: usize, height: usize, max_depth: usize, samples_per_pixel: usiz
     im
 }
 
+#[cfg(not(tarpaulin_include))]
 fn main() {
     let aspect_ratio = 16.0 / 9.0;
     let width = 16;
@@ -463,21 +464,17 @@ fn main() {
     ppmwrite("out/latest.ppm", &im);
 }
 
-
-
 #[cfg(test)]
 pub(crate) mod test {
     use crate::image::ImageRGBA;
     use crate::render;
 
     #[test]
-    fn test_nominal_render(){
+    fn test_nominal_render() {
         let im = render(16, 9, 5, 1);
         let default_img = ImageRGBA::new(16, 9);
 
         assert_eq!(im.width, 16);
         assert_eq!(im.height, 9);
-
     }
-
 }
