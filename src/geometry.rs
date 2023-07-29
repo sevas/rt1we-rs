@@ -1,6 +1,7 @@
 //! 3D geometry functions and data structures.
 use rand::Rng;
 use std::ops;
+use std::ops::{AddAssign, SubAssign};
 
 #[derive(Debug, Copy, Clone)]
 /// Vec3 representation.
@@ -133,10 +134,50 @@ impl<'a, 'b> ops::Add<&'a Vec3> for &'b Vec3 {
     }
 }
 
+/// Operator += for Vec3
+///
+/// # Examples
+/// ```
+/// let mut p = Vec3{x: 1.0, y: 2.0, z: 3.0 };
+/// let q = Vec3{x: 0.5, y: 0.5, z: 0.5};
+/// p += q;
+/// ```
+impl AddAssign for Vec3 {
+    fn add_assign(&mut self, rhs: Self) {
+        self.x += rhs.x;
+        self.y += rhs.y;
+        self.z += rhs.z;
+    }
+}
+
+/// Operator - for Vec3
+///
+/// # Examples
+/// ```
+/// let p = Vec3{x: 1.0, y: 2.0, z: 3.0 };
+/// let q = Vec3{x: 0.5, y: 0.5, z: 0.5};
+/// let s = p - q;
+/// ```
 impl ops::Sub for Vec3 {
     type Output = Vec3;
     fn sub(self, other: Vec3) -> Vec3 {
         Vec3 { x: self.x - other.x, y: self.y - other.y, z: self.z - other.z }
+    }
+}
+
+/// Operator -= for Vec3
+///
+/// # Examples
+/// ```
+/// let mut p = Vec3{x: 1.0, y: 2.0, z: 3.0 };
+/// let q = Vec3{x: 0.5, y: 0.5, z: 0.5};
+/// p -= q;
+/// ```
+impl SubAssign for Vec3 {
+    fn sub_assign(&mut self, rhs: Self) {
+        self.x -= rhs.x;
+        self.y -= rhs.y;
+        self.z -= rhs.z;
     }
 }
 
@@ -159,6 +200,14 @@ impl ops::Mul<Vec3> for Vec3 {
     type Output = Vec3;
     fn mul(self, rhs: Vec3) -> Vec3 {
         Vec3 { x: self.x * rhs.x, y: self.y * rhs.y, z: self.z * rhs.z }
+    }
+}
+
+impl ops::MulAssign<f32> for Vec3 {
+    fn mul_assign(&mut self, rhs: f32) {
+        self.x *= rhs;
+        self.y *= rhs;
+        self.z *= rhs;
     }
 }
 
@@ -225,11 +274,18 @@ impl ops::Div<f32> for Vec3 {
     }
 }
 
+impl ops::DivAssign<f32> for Vec3 {
+    fn div_assign(&mut self, rhs: f32) {
+        self.x /= rhs;
+        self.y /= rhs;
+        self.z /= rhs;
+    }
+}
+
 impl<'a> ops::Div<f32> for &'a Vec3 {
     type Output = Vec3;
     fn div(self, s: f32) -> Vec3 {
         Vec3 { x: self.x / s, y: self.y / s, z: self.z / s }
-        // self * 1.0 / s
     }
 }
 
@@ -307,7 +363,7 @@ impl Color {
 #[cfg(test)]
 pub(crate) mod test {
     mod vec3 {
-        use crate::geometry::{lerp, reflect, refract};
+        use crate::geometry::{lerp, make_color_from_u8, random_in_hemisphere, reflect, refract};
         use crate::Vec3;
 
         #[test]
@@ -321,6 +377,15 @@ pub(crate) mod test {
             assert!(rand_vec3.x >= 0.0 && rand_vec3.x <= 1.0);
             assert!(rand_vec3.y >= 0.0 && rand_vec3.y <= 1.0);
             assert!(rand_vec3.z >= 0.0 && rand_vec3.z <= 1.0);
+        }
+
+        #[test]
+        fn test_random_vec_in_hemisphere_always_with_unit_sphere() {
+            let random_vec3 = random_in_hemisphere(&Vec3::UNIT_Y);
+            assert!(random_vec3.len() <= 1.0);
+
+            let random_vec3 = random_in_hemisphere(&-Vec3::UNIT_Y);
+            assert!(random_vec3.len() <= 1.0);
         }
 
         #[test]
@@ -344,12 +409,78 @@ pub(crate) mod test {
         }
 
         #[test]
+        fn test_addassign() {
+            let p = Vec3 { x: 1.0, y: 2.0, z: 3.0 };
+            let q = Vec3 { x: 4.0, y: 5.0, z: 6.0 };
+            let mut summed = p;
+
+            summed += q;
+            assert_eq!(summed, p + q);
+        }
+
+        #[test]
+        fn test_sub_operator_sums_vec_components() {
+            let p = Vec3 { x: 1.0, y: 2.0, z: 3.0 };
+            let q = Vec3 { x: 4.0, y: 5.0, z: 6.0 };
+
+            let p_minus_q = p - q;
+            let expected = Vec3 { x: -3.0, y: -3.0, z: -3.0 };
+            assert_eq!(expected, p_minus_q);
+        }
+
+        #[test]
+        fn test_subassign() {
+            let p = Vec3 { x: 1.0, y: 2.0, z: 3.0 };
+            let q = Vec3 { x: 4.0, y: 5.0, z: 6.0 };
+            let mut subbed = p;
+
+            subbed -= q;
+            assert_eq!(subbed, p - q);
+        }
+
+        #[test]
         fn test_mul() {
             let p = Vec3 { x: 1.0, y: 2.0, z: 3.0 };
 
             let p_times_2 = p * 2.0;
             let expected = Vec3 { x: 2.0, y: 4.0, z: 6.0 };
             assert_eq!(expected, p_times_2);
+        }
+
+        #[test]
+        fn test_mulassign() {
+            let p = Vec3 { x: 1.0, y: 2.0, z: 3.0 };
+
+            let mut mult = p;
+            mult *= 2.0;
+
+            assert_eq!(mult, p * 2.0);
+        }
+
+        #[test]
+        fn test_div_with_scalar() {
+            let p = Vec3 { x: 1.0, y: 2.0, z: 3.0 };
+            let p_div_2 = p / 2.0;
+            let expected = Vec3 { x: 0.5, y: 1.0, z: 1.5 };
+            assert_eq!(expected, p_div_2);
+        }
+
+        #[test]
+        fn test_divref_with_scalar() {
+            let p = Vec3 { x: 1.0, y: 2.0, z: 3.0 };
+            let p_div_2 = &p / 2.0;
+            let expected = Vec3 { x: 0.5, y: 1.0, z: 1.5 };
+            assert_eq!(expected, p_div_2);
+        }
+
+        #[test]
+        fn test_divassign_with_scalar() {
+            let p = Vec3 { x: 1.0, y: 2.0, z: 3.0 };
+            let mut divided = p;
+
+            divided /= 2.0;
+
+            assert_eq!(divided, p / 2.0);
         }
 
         #[test]
@@ -418,7 +549,7 @@ pub(crate) mod test {
         }
 
         #[test]
-        fn test_normed() {
+        fn test_normed_returns_a_normalized_vec() {
             let p = Vec3 { x: 1.0, y: 2.0, z: 3.0 };
             let pn = p.normed();
             let sz = p.len();
@@ -501,6 +632,15 @@ pub(crate) mod test {
             let refracted = refract(&v, &n, 1.3);
             let expected = Vec3 { x: 0.91923875, y: -0.39370057, z: 0.0 };
             assert_eq!(expected, refracted);
+        }
+
+        #[test]
+        fn test_make_color_from_u8_normalizes_values_in_0_1_range() {
+            let [r, g, b] = [127u8, 127u8, 127u8];
+            let color = make_color_from_u8(r, g, b);
+            assert_f32_near!(color.x, 127.0 / 255.0);
+            assert_f32_near!(color.y, 127.0 / 255.0);
+            assert_f32_near!(color.z, 127.0 / 255.0);
         }
     }
 }
