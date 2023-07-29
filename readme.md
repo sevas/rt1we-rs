@@ -1,7 +1,7 @@
 # rt1we-rs
 
 ![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/sevas/rt1we-rs/rust.yml)
-
+[![codecov](https://codecov.io/gh/sevas/rt1we-rs/branch/main/graph/badge.svg?token=OATNZZ420B)](https://codecov.io/gh/sevas/rt1we-rs)
 
 Raytracer in one weekend, in rust.
 
