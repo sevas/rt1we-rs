@@ -284,7 +284,6 @@ fn ray_color_2(
             attenuation * px_color
             // attenuation * ray_color_2(&scattered, world, depth - 1, &materials)
         } else {
-            // Color { x: 128.0 / 255.0, y: 0.0, z: 0.0 }
             Color::BLACK
         };
         // --- simple lambertian
@@ -344,6 +343,15 @@ impl Camera {
         Camera { origin, lower_left_corner, horizontal, vertical }
     }
 
+    /// Generate a ray from the camera origin to the given pixel coordinates.
+    /// The coordinates are normalized between 0 and 1.
+    /// (0, 0) is the lower left corner, (1, 1) is the upper right corner.
+    /// # Arguments
+    /// - `u` - Horizontal coordinate
+    /// - `v` - Vertical coordinate
+    /// # Returns
+    /// A ray from the camera origin to the given pixel coordinates.
+    /// The coordinates are normalized between 0 and 1.
     pub fn get_ray(&self, u: f32, v: f32) -> Ray {
         let dir =
             self.lower_left_corner + (u * self.horizontal) + (v * self.vertical) - self.origin;
@@ -476,5 +484,13 @@ pub(crate) mod test {
 
         assert_eq!(im.width, 16);
         assert_eq!(im.height, 9);
+
+        let mut diff_count = 0usize;
+        for (p1, p2) in im.pixels.iter().zip(default_img.pixels.iter()) {
+            if p1 != p2 {
+                diff_count += 1;
+            }
+        }
+        assert!((diff_count as f32) / im.pixels.len() as f32 > 0.5);
     }
 }
