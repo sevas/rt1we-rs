@@ -17,8 +17,8 @@ impl Vec3 {
     pub const UNIT_Y: Vec3 = Vec3 { x: 0.0, y: 1.0, z: 0.0 };
     pub const UNIT_Z: Vec3 = Vec3 { x: 0.0, y: 0.0, z: 1.0 };
 
-    pub fn new() -> Vec3 {
-        Vec3::ZERO
+    pub fn new(x: f32, y: f32, z: f32) -> Self {
+        Vec3 { x, y, z }
     }
 
     pub fn dot(&self, other: &Vec3) -> f32 {
@@ -109,6 +109,12 @@ pub fn random_in_hemisphere(normal: &Vec3) -> Vec3 {
         return in_unit_sphere;
     } else {
         return -in_unit_sphere;
+    }
+}
+
+impl Default for Vec3 {
+    fn default() -> Self {
+        Vec3::ZERO
     }
 }
 
@@ -368,7 +374,9 @@ pub(crate) mod test {
 
         #[test]
         fn test_default_vec3_is_all_zeros() {
-            assert_eq!(Vec3::new(), Vec3::ZERO);
+            let vec: Vec3 = Default::default();
+
+            assert_eq!(vec, Vec3::ZERO);
         }
 
         #[test]
