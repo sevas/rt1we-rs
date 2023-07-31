@@ -341,21 +341,21 @@ struct Camera {
 }
 
 impl Camera {
-    pub fn new(vfov: f32, aspect_ratio: f32) -> Self {
+    pub fn new(lookfrom: Point, lookat: Point, vup: Vec3, vfov: f32, aspect_ratio: f32) -> Self {
         let theta = deg2rad(vfov);
         let h = (theta / 2.0).tan();
 
         let vp_height = 2.0 * h;
         let vp_width = aspect_ratio * vp_height;
-        let focal_length = 1.0;
 
-        let origin = Point { x: 0.0, y: 0.0, z: 0.0 };
-        let horizontal = Vec3 { x: vp_width, y: 0.0, z: 0.0 };
-        let vertical = Vec3 { x: 0.0, y: vp_height, z: 0.0 };
-        let lower_left_corner = origin
-            - (horizontal / 2.0)
-            - (vertical / 2.0)
-            - Vec3 { x: 0.0, y: 0.0, z: focal_length };
+        let w = (lookfrom - lookat).normed();
+        let u = (vup.cross(&w)).normed();
+        let v = w.cross(&u);
+
+        let origin = lookfrom;
+        let horizontal = vp_width * u;
+        let vertical = vp_height * v;
+        let lower_left_corner = origin - (horizontal / 2.0) - (vertical / 2.0) - w;
 
         Camera { origin, lower_left_corner, horizontal, vertical }
     }
@@ -431,7 +431,13 @@ fn render(width: usize, height: usize, max_depth: usize, samples_per_pixel: usiz
         material_id: lambertian_green_index,
     });
 
-    let cam = Camera::new(120.0, aspect_ratio);
+    let cam = Camera::new(
+        Vec3::new(-2.0, 2.0, 1.0),
+        Vec3::new(0.0, 0.0, -1.0),
+        Vec3::new(0.0, 1.0, 0.0),
+        90.0,
+        aspect_ratio,
+    );
     let mut rng = rand::thread_rng();
     println!("\n\n--- Starting render");
 
@@ -470,11 +476,11 @@ fn render(width: usize, height: usize, max_depth: usize, samples_per_pixel: usiz
 #[cfg(not(tarpaulin_include))]
 fn main() {
     let aspect_ratio = 16.0 / 9.0;
-    let width = 160;
+    let width = 1280;
     let height = (width as f32 / aspect_ratio) as usize;
-    let max_depth = 10;
+    let max_depth = 50;
 
-    let samples_per_pixel = 10;
+    let samples_per_pixel = 100;
 
     let start = Instant::now();
     let im = render(width, height, max_depth, samples_per_pixel);
