@@ -80,10 +80,10 @@ impl Material for Lambertian {
 
         *scattered = Ray { orig: rec.p, dir: scatter_direction };
         *attenuation = self.albedo;
-        println!(
-            "[mat=lambertian] IN: {0:?}  OUT: {1:?}  ATT: {2:?}",
-            &rec.normal, scatter_direction, attenuation
-        );
+        // println!(
+        //     "[mat=lambertian] IN: {0:?}  OUT: {1:?}  ATT: {2:?}",
+        //     &rec.normal, scatter_direction, attenuation
+        // );
         true
     }
 }
@@ -143,7 +143,7 @@ impl Material for Dieletric {
             refract(&unit_dir, &rec.normal, self.refraction_index)
         };
         *scattered = Ray { orig: rec.p, dir: -direction };
-        println!("[mat=dielectric] IN: {unit_dir:?} OUT: {direction:?}");
+        // println!("[mat=dielectric] IN: {unit_dir:?} OUT: {direction:?}");
 
         // let refracted = refract(&unit_dir, &rec.normal, refraction_ratio);
         // *scattered = Ray { orig: rec.p, dir: refracted };
@@ -280,7 +280,7 @@ fn ray_color_2(
     let mut rec = HitRecord::new();
 
     if depth == 0 {
-        println!("[depth=0]!!! depth limit reached");
+        //println!("[depth=0]!!! depth limit reached");
         return Color { x: 0.0, y: 0.0, z: 0.0 };
     }
 
@@ -292,11 +292,11 @@ fn ray_color_2(
         let was_scattered =
             materials[rec.material_id].scatter(r, &mut rec, &mut attenuation, &mut scattered);
 
-        println!("[depth={depth}]was scattered?  {was_scattered}");
-        println!("[depth={depth}]attenuation?  {attenuation:?}");
+        // println!("[depth={depth}]was scattered?  {was_scattered}");
+        // println!("[depth={depth}]attenuation?  {attenuation:?}");
         return if was_scattered {
             let px_color = ray_color_2(&scattered, world, depth - 1, &materials);
-            println!("[depth={depth}]px_color {px_color:?}");
+            // println!("[depth={depth}]px_color {px_color:?}");
             attenuation * px_color
             // attenuation * ray_color_2(&scattered, world, depth - 1, &materials)
         } else {
@@ -316,7 +316,7 @@ fn ray_color_2(
     }
 
     // background sky
-    println!("[depth={depth}] Hit the sky");
+    // println!("[depth={depth}] Hit the sky");
     let unit_direction = &r.dir.normed();
     let t = 0.5 * (unit_direction.y + 1.0);
     lerp(&Color::WHITE, &Color { x: 0.5, y: 0.7, z: 1.0 }, t)
@@ -442,10 +442,10 @@ fn render(width: usize, height: usize, max_depth: usize, samples_per_pixel: usiz
     println!("\n\n--- Starting render");
 
     for j in (0..im.height).rev() {
-        //print!("\rScanlines remaining {j}");
+        print!("\rScanlines remaining {j}");
 
         for i in 0..im.width {
-            println!("=========== BEGIN rendering pixel at [{i}, {j}]");
+            // println!("=========== BEGIN rendering pixel at [{i}, {j}]");
             let mut pixel_color = Color::BLACK;
 
             for _ in 0..samples_per_pixel {
@@ -465,7 +465,7 @@ fn render(width: usize, height: usize, max_depth: usize, samples_per_pixel: usiz
             let ig = (clamp(pixel_color_corrected.y, 0.0, 0.999) * 256.0) as u8;
             let ib = (clamp(pixel_color_corrected.z, 0.0, 0.999) * 256.0) as u8;
 
-            println!("=========== DONE  rendering pixel at [{i}, {j}]");
+            // println!("=========== DONE  rendering pixel at [{i}, {j}]");
 
             im.put(i, j, ir, ig, ib, 255);
         }
