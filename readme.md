@@ -10,6 +10,10 @@ https://github.com/RayTracing/raytracing.github.io/
 This is a toy project for educational purpose. 
 Don't expect anything mindblowing. Just simple code from first principles. 
 
+Current status: 
+![](media/latest.png)
+
+
 ## Word of Caution
 
 Since I am just learning rust, some stuff might be badly implemented.
