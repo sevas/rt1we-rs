@@ -15,6 +15,7 @@ use crate::geometry::{
 use crate::image::{flipv, ImageRGBA};
 use crate::ppmio::ppmwrite;
 use crate::ray::{hit_sphere2, Ray};
+use crate::trig::deg2rad;
 use rand::Rng;
 use std::time::Instant;
 
@@ -340,10 +341,11 @@ struct Camera {
 }
 
 impl Camera {
-    pub fn new() -> Self {
-        let aspect_ratio = 16.0 / 9.0;
+    pub fn new(vfov: f32, aspect_ratio: f32) -> Self {
+        let theta = deg2rad(vfov);
+        let h = (theta / 2.0).tan();
 
-        let vp_height = 2.0;
+        let vp_height = 2.0 * h;
         let vp_width = aspect_ratio * vp_height;
         let focal_length = 1.0;
 
@@ -383,6 +385,8 @@ impl Camera {
 /// - `max_depth` - Maximum number of ray bounces after a hit.
 /// - `samples_per_pixel` - How many random rays to generate and average to compute final pixel color.
 fn render(width: usize, height: usize, max_depth: usize, samples_per_pixel: usize) -> ImageRGBA {
+    let aspect_ratio = width as f32 / height as f32;
+
     let mut im = ImageRGBA::new(width, height);
     let materials: Vec<Box<dyn Material>> = vec![
         Box::new(Lambertian { albedo: Color { x: 0.8, y: 0.8, z: 0.0 } }),
@@ -427,7 +431,7 @@ fn render(width: usize, height: usize, max_depth: usize, samples_per_pixel: usiz
         material_id: lambertian_green_index,
     });
 
-    let cam = Camera::new();
+    let cam = Camera::new(120.0, aspect_ratio);
     let mut rng = rand::thread_rng();
     println!("\n\n--- Starting render");
 
