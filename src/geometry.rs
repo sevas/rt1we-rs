@@ -98,7 +98,7 @@ pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
 pub fn refract(uv: &Vec3, n: &Vec3, etai_over_etat: f32) -> Vec3 {
     let cos_theta = dot(&-uv, n).min(1.0);
     let r_out_perp = etai_over_etat * (uv + &(cos_theta * n));
-    let r_out_parallel = (1.0 - r_out_perp.len_squared()).abs().sqrt() * -1.0 * n;
+    let r_out_parallel = -1.0 * (1.0 - r_out_perp.len_squared()).abs().sqrt() * n;
     r_out_perp + r_out_parallel
 }
 
@@ -620,6 +620,16 @@ pub(crate) mod test {
             let reflected = reflect(&v, &n);
             let expected = Vec3 { x: 1.0, y: 1.0, z: 0.0 }.normed();
             assert_eq!(expected, reflected);
+        }
+
+        #[test]
+        fn test_refract() {
+            let uv = Vec3 { x: 1.0, y: 1.0, z: 0.0 };
+            let n = Vec3 { x: -1.0, y: 0.0, z: 0.0 };
+            let etai_over_etat = 1.0;
+            let expected = Vec3 { x: 0.0, y: 1.0, z: 0.0 };
+            let actual = refract(&uv, &n, etai_over_etat);
+            assert_eq!(actual, expected);
         }
 
         #[test]

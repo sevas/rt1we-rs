@@ -112,14 +112,13 @@ struct Dieletric {
     refraction_index: f32,
 }
 
-// attenuation = color(1.0, 1.0, 1.0);
-//             double refraction_ratio = rec.front_face ? (1.0/ir) : ir;
-//
-//             vec3 unit_direction = unit_vector(r_in.direction());
-//             vec3 refracted = refract(unit_direction, rec.normal, refraction_ratio);
-//
-//             scattered = ray(rec.p, refracted);
-//             return true;
+impl Dieletric {
+    fn reflectance(cosine: f32, ref_idx: f32) -> f32 {
+        let r0 = (1.0 - ref_idx) / (1.0 + ref_idx);
+        let r0 = r0 * r0;
+        r0 + (1.0 - r0) * (1.0 - cosine).powi(5)
+    }
+}
 
 impl Material for Dieletric {
     fn scatter(
@@ -129,9 +128,25 @@ impl Material for Dieletric {
         let refraction_ratio =
             if rec.front_face { 1.0 / self.refraction_index } else { self.refraction_index };
         let unit_dir = r_in.dir.normed();
-        let refracted = refract(&unit_dir, &rec.normal, refraction_ratio);
-        *scattered = Ray { orig: rec.p, dir: refracted };
-        println!("[mat=dielectric] IN: {unit_dir:?} OUT: {refracted:?}");
+
+        let mut rng = rand::thread_rng();
+
+        let cos_theta = dot(&-unit_dir, &rec.normal).min(1.0);
+        let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
+        let cannot_refract = refraction_ratio * sin_theta > 1.0;
+        let direction = if cannot_refract
+            || Dieletric::reflectance(cos_theta, refraction_ratio) > rng.gen::<f32>()
+        {
+            reflect(&unit_dir, &rec.normal)
+        } else {
+            refract(&unit_dir, &rec.normal, self.refraction_index)
+        };
+        *scattered = Ray { orig: rec.p, dir: -direction };
+        println!("[mat=dielectric] IN: {unit_dir:?} OUT: {direction:?}");
+
+        // let refracted = refract(&unit_dir, &rec.normal, refraction_ratio);
+        // *scattered = Ray { orig: rec.p, dir: refracted };
+        // println!("[mat=dielectric] IN: {unit_dir:?} OUT: {refracted:?}");
 
         true
     }
@@ -356,7 +371,7 @@ impl Camera {
         let dir =
             self.lower_left_corner + (u * self.horizontal) + (v * self.vertical) - self.origin;
 
-        Ray { orig: self.origin.clone(), dir }
+        Ray { orig: self.origin, dir }
     }
 }
 
@@ -451,11 +466,11 @@ fn render(width: usize, height: usize, max_depth: usize, samples_per_pixel: usiz
 #[cfg(not(tarpaulin_include))]
 fn main() {
     let aspect_ratio = 16.0 / 9.0;
-    let width = 16;
+    let width = 160;
     let height = (width as f32 / aspect_ratio) as usize;
-    let max_depth = 5;
+    let max_depth = 10;
 
-    let samples_per_pixel = 1;
+    let samples_per_pixel = 10;
 
     let start = Instant::now();
     let im = render(width, height, max_depth, samples_per_pixel);
