@@ -384,7 +384,9 @@ impl Camera {
 /// - `height` - Output image height
 /// - `max_depth` - Maximum number of ray bounces after a hit.
 /// - `samples_per_pixel` - How many random rays to generate and average to compute final pixel color.
-fn render(width: usize, height: usize, max_depth: usize, samples_per_pixel: usize) -> ImageRGBA {
+fn render(
+    width: usize, height: usize, max_depth: usize, samples_per_pixel: usize, position: &Point,
+) -> ImageRGBA {
     let aspect_ratio = width as f32 / height as f32;
 
     let mut im = ImageRGBA::new(width, height);
@@ -432,7 +434,7 @@ fn render(width: usize, height: usize, max_depth: usize, samples_per_pixel: usiz
     });
 
     let cam = Camera::new(
-        Vec3::new(-2.0, 2.0, 1.0),
+        *position,
         Vec3::new(0.0, 0.0, -1.0),
         Vec3::new(0.0, 1.0, 0.0),
         90.0,
@@ -473,38 +475,65 @@ fn render(width: usize, height: usize, max_depth: usize, samples_per_pixel: usiz
     im
 }
 
+fn interpolate(points: &Vec<Point>, factor: u32) -> Vec<Point> {
+    let v = points[0];
+    let w = points[1];
+    let mut out: Vec<Point> = vec![v];
+
+    let step = 1.0 / factor as f32;
+    for i in 1..factor {
+        let p = lerp(&v, &w, step * (i as f32));
+        out.push(p);
+    }
+    out.push(w);
+
+    out
+}
+
 #[cfg(not(tarpaulin_include))]
 fn main() {
     let aspect_ratio = 16.0 / 9.0;
-    let width = 1280;
+    let width = 640;
     let height = (width as f32 / aspect_ratio) as usize;
     let max_depth = 50;
 
     let samples_per_pixel = 100;
 
-    let start = Instant::now();
-    let im = render(width, height, max_depth, samples_per_pixel);
-    let elapsed = start.elapsed();
+    let trajectory_points = vec![Vec3::new(-2.0, 2.0, 1.0), Vec3::new(2.0, 2.0, 1.0)];
 
-    println!("=============== Summary");
-    println!("Time elapsed   : {elapsed:?}");
-    println!("Image size     : {width}x{height}");
-    println!("Max ray depth  : {max_depth}");
-    println!("#Samples/px    : {samples_per_pixel}");
+    let trajectory = interpolate(&trajectory_points, 100);
 
-    let im = flipv(&im);
-    ppmwrite("out/image015.ppm", &im);
-    ppmwrite("out/latest.ppm", &im);
+    for (i, p) in trajectory.iter().enumerate() {
+        print!("--- Rendering frame #{}", i);
+        let start = Instant::now();
+        let im = render(width, height, max_depth, samples_per_pixel, p);
+        let elapsed = start.elapsed();
+
+        println!("\n--- Summary");
+        println!("Time elapsed   : {elapsed:?}");
+        println!("Image size     : {width}x{height}");
+        println!("Max ray depth  : {max_depth}");
+        println!("#Samples/px    : {samples_per_pixel}");
+
+        let im = flipv(&im);
+
+        let fpath = format!("out/anim_image_{:0>5}.ppm", i);
+        ppmwrite(&fpath, &im);
+        ppmwrite("out/latest.ppm", &im);
+    }
 }
 
 #[cfg(test)]
 pub(crate) mod test {
+    use crate::geometry::Point;
     use crate::image::ImageRGBA;
+    use crate::interpolate;
     use crate::render;
 
     #[test]
     fn test_nominal_render() {
-        let im = render(16, 9, 5, 1);
+        let pos = Point::new(-2.0, 2.0, 1.0);
+        let im = render(16, 9, 5, 1, pos);
         let default_img = ImageRGBA::new(16, 9);
 
         assert_eq!(im.width, 16);
@@ -517,5 +546,27 @@ pub(crate) mod test {
             }
         }
         assert!((diff_count as f32) / im.pixels.len() as f32 > 0.5);
+    }
+
+    #[test]
+    fn test_linear_trajectory_interpolation() {
+        let start = Point::new(0.0, 0.0, 0.0);
+        let end = Point::new(0.0, 0.0, 1.0);
+
+        let points = vec![start, end];
+        let trajectory = interpolate(&points, 10);
+
+        assert_eq!(trajectory.len(), 11);
+        assert_eq!(trajectory[0], start);
+        assert_eq!(trajectory[1], Point::new(0.0, 0.0, 0.1));
+        assert_eq!(trajectory[2], Point::new(0.0, 0.0, 0.2));
+        assert_eq!(trajectory[3], Point::new(0.0, 0.0, 0.3));
+        assert_eq!(trajectory[4], Point::new(0.0, 0.0, 0.4));
+        assert_eq!(trajectory[5], Point::new(0.0, 0.0, 0.5));
+        assert_eq!(trajectory[6], Point::new(0.0, 0.0, 0.6));
+        assert_eq!(trajectory[7], Point::new(0.0, 0.0, 0.7));
+        assert_eq!(trajectory[8], Point::new(0.0, 0.0, 0.8));
+        assert_eq!(trajectory[9], Point::new(0.0, 0.0, 0.9));
+        assert_eq!(trajectory[10], end);
     }
 }
