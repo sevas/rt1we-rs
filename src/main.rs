@@ -475,17 +475,23 @@ fn render(
     im
 }
 
+/// Interpolate positions to make a trajectory.
 fn interpolate(points: &Vec<Point>, factor: u32) -> Vec<Point> {
-    let v = points[0];
-    let w = points[1];
-    let mut out: Vec<Point> = vec![v];
+    let mut out: Vec<Point> = Vec::new();
 
-    let step = 1.0 / factor as f32;
-    for i in 1..factor {
-        let p = lerp(&v, &w, step * (i as f32));
-        out.push(p);
+    let count = points.len();
+
+    for i in 1..count {
+        let v = points[i - 1];
+        let w = points[i];
+        out.push(v);
+        let step = 1.0 / factor as f32;
+        for i in 1..factor {
+            let p = lerp(&v, &w, step * (i as f32));
+            out.push(p);
+        }
+        out.push(w);
     }
-    out.push(w);
 
     out
 }
@@ -493,13 +499,18 @@ fn interpolate(points: &Vec<Point>, factor: u32) -> Vec<Point> {
 #[cfg(not(tarpaulin_include))]
 fn main() {
     let aspect_ratio = 16.0 / 9.0;
-    let width = 640;
+    let width = 1280;
     let height = (width as f32 / aspect_ratio) as usize;
     let max_depth = 50;
 
     let samples_per_pixel = 100;
 
-    let trajectory_points = vec![Vec3::new(-2.0, 2.0, 1.0), Vec3::new(2.0, 2.0, 1.0)];
+    let trajectory_points = vec![
+        Vec3::new(-2.0, 2.0, 1.0),
+        Vec3::new(2.0, 2.0, 1.0),
+        Vec3::new(2.0, -2.0, 1.0),
+        Vec3::new(-2.0, -2.0, 1.0),
+    ];
 
     let trajectory = interpolate(&trajectory_points, 100);
 
@@ -551,12 +562,13 @@ pub(crate) mod test {
     #[test]
     fn test_linear_trajectory_interpolation() {
         let start = Point::new(0.0, 0.0, 0.0);
-        let end = Point::new(0.0, 0.0, 1.0);
+        let mid = Point::new(0.0, 0.0, 1.0);
+        let end = Point::new(0.0, 1.0, 1.0);
 
-        let points = vec![start, end];
+        let points = vec![start, mid, end];
         let trajectory = interpolate(&points, 10);
 
-        assert_eq!(trajectory.len(), 11);
+        assert_eq!(trajectory.len(), 22);
         assert_eq!(trajectory[0], start);
         assert_eq!(trajectory[1], Point::new(0.0, 0.0, 0.1));
         assert_eq!(trajectory[2], Point::new(0.0, 0.0, 0.2));
@@ -567,6 +579,17 @@ pub(crate) mod test {
         assert_eq!(trajectory[7], Point::new(0.0, 0.0, 0.7));
         assert_eq!(trajectory[8], Point::new(0.0, 0.0, 0.8));
         assert_eq!(trajectory[9], Point::new(0.0, 0.0, 0.9));
-        assert_eq!(trajectory[10], end);
+        assert_eq!(trajectory[10], mid);
+        assert_eq!(trajectory[11], Point::new(0.0, 0.0, 1.0));
+        assert_eq!(trajectory[12], Point::new(0.0, 0.1, 1.0));
+        assert_eq!(trajectory[13], Point::new(0.0, 0.2, 1.0));
+        assert_eq!(trajectory[14], Point::new(0.0, 0.3, 1.0));
+        assert_eq!(trajectory[15], Point::new(0.0, 0.4, 1.0));
+        assert_eq!(trajectory[16], Point::new(0.0, 0.5, 1.0));
+        assert_eq!(trajectory[17], Point::new(0.0, 0.6, 1.0));
+        assert_eq!(trajectory[18], Point::new(0.0, 0.7, 1.0));
+        assert_eq!(trajectory[19], Point::new(0.0, 0.8, 1.0));
+        assert_eq!(trajectory[20], Point::new(0.0, 0.9, 1.0));
+        assert_eq!(trajectory[21], end);
     }
 }
