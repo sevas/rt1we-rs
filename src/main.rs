@@ -533,7 +533,7 @@ pub(crate) mod test {
     #[test]
     fn test_nominal_render() {
         let pos = Point::new(-2.0, 2.0, 1.0);
-        let im = render(16, 9, 5, 1, pos);
+        let im = render(16, 9, 5, 1, &pos);
         let default_img = ImageRGBA::new(16, 9);
 
         assert_eq!(im.width, 16);
