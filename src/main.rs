@@ -499,7 +499,7 @@ fn interpolate(points: &Vec<Point>, factor: u32) -> Vec<Point> {
 #[cfg(not(tarpaulin_include))]
 fn main() {
     let aspect_ratio = 16.0 / 9.0;
-    let width = 1280;
+    let width = 160;
     let height = (width as f32 / aspect_ratio) as usize;
     let max_depth = 50;
 
@@ -512,7 +512,8 @@ fn main() {
         Vec3::new(-2.0, 0.1, 0.5),
     ];
 
-    let trajectory = interpolate(&trajectory_points, 100);
+    //let trajectory = interpolate(&trajectory_points, 2);
+    let trajectory = vec![trajectory_points[0]];
     let count = trajectory.len();
     for (i, p) in trajectory.iter().enumerate() {
         print!("\n\n--- Rendering frame #{}/{}", i, count);
