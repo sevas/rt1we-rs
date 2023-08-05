@@ -13,11 +13,13 @@ Don't expect anything mindblowing. Just simple code from first principles.
 Current status: 
 ![](media/latest.png)
 
-[Video of a simple trajectory](media/output.mp4)
+- [Video of a simple trajectory (mp4)](media/output.mp4)
+- [Video of a simple trajectory (mov)](media/output.mov)
 
 <div>
 <video width="99%" height="360" autoplay loop muted>
     <source src="media/output.mp4" type="video/mp4" markdown="1">
+    <source src="media/output.mov" type="video/mov" markdown="1">
 </video>
 </div>
 
