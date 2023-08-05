@@ -106,9 +106,9 @@ pub fn refract(uv: &Vec3, n: &Vec3, etai_over_etat: f32) -> Vec3 {
 pub fn random_in_hemisphere(normal: &Vec3) -> Vec3 {
     let in_unit_sphere = random_in_unit_sphere();
     if dot(&in_unit_sphere, &normal) > 0.0 {
-        return in_unit_sphere;
+        in_unit_sphere
     } else {
-        return -in_unit_sphere;
+        -in_unit_sphere
     }
 }
 
