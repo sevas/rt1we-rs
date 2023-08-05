@@ -441,7 +441,7 @@ fn render(
         aspect_ratio,
     );
     let mut rng = rand::thread_rng();
-    println!("\n\n--- Starting render");
+    println!("--- Starting render");
 
     for j in (0..im.height).rev() {
         print!("\rScanlines remaining {j}");
@@ -508,14 +508,14 @@ fn main() {
     let trajectory_points = vec![
         Vec3::new(-2.0, 2.0, 1.0),
         Vec3::new(2.0, 2.0, 1.0),
-        Vec3::new(2.0, -2.0, 1.0),
-        Vec3::new(-2.0, -2.0, 1.0),
+        Vec3::new(2.0, 0.1, 0.3),
+        Vec3::new(-2.0, 0.1, 0.5),
     ];
 
     let trajectory = interpolate(&trajectory_points, 100);
-
+    let count = trajectory.len();
     for (i, p) in trajectory.iter().enumerate() {
-        print!("--- Rendering frame #{}", i);
+        print!("\n\n--- Rendering frame #{}/{}", i, count);
         let start = Instant::now();
         let im = render(width, height, max_depth, samples_per_pixel, p);
         let elapsed = start.elapsed();
