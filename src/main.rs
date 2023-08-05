@@ -536,10 +536,20 @@ fn main() {
 
 #[cfg(test)]
 pub(crate) mod test {
-    use crate::geometry::Point;
+    use crate::geometry::{Point, Vec3};
     use crate::image::ImageRGBA;
     use crate::interpolate;
-    use crate::render;
+    use crate::{HitRecord, render};
+    use crate::ray::{Ray};
+
+    #[test]
+    fn test_hitrecord(){
+        let mut rec = HitRecord::new();
+
+        let r = Ray{orig: Point::ZERO, dir: -Vec3::UNIT_Z};
+
+        rec.set_face_normal(&r, &Vec3::UNIT_X);
+    }
 
     #[test]
     fn test_nominal_render() {
