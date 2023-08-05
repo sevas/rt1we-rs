@@ -13,6 +13,14 @@ Don't expect anything mindblowing. Just simple code from first principles.
 Current status: 
 ![](media/latest.png)
 
+[Video of a simple trajectory](media/output.mp4)
+
+<div>
+<video width="99%" height="360" autoplay loop muted>
+    <source src="media/output.mp4" type="video/mp4" markdown="1">
+</video>
+</div>
+
 
 ## Word of Caution
 
