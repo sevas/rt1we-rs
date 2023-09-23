@@ -169,7 +169,7 @@ pub struct Sphere {
 
 impl Hittable for Sphere {
     fn hit(self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
-        let oc = &r.orig - &self.center;
+        let oc = r.orig - self.center;
         let a = r.dir.len_squared();
         let half_b = dot(&oc, &r.dir);
         let c = oc.len_squared() - self.radius * self.radius;
@@ -195,6 +195,30 @@ impl Hittable for Sphere {
         rec.material_id = self.material_id;
         rec.set_face_normal(r, &outward_normal);
         true
+    }
+}
+
+pub struct Plane {
+    center: Point,
+    normal: Vec3,
+    material_id: usize,
+}
+
+impl Hittable for Plane {
+    fn hit(self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
+        let denom = dot(&self.normal, &r.dir);
+        if denom > 1e-6 {
+            let v = self.center - r.orig;
+            let t = dot(&v, &self.normal) / denom;
+            if t >= 0.0 {
+                rec.t = t;
+                rec.p = r.at(t);
+                rec.material_id = self.material_id;
+                rec.set_face_normal(r, &self.normal);
+                return true;
+            }
+        }
+        false
     }
 }
 
@@ -236,7 +260,7 @@ impl HittableList {
             if each.hit(r, t_min, closest_so_far, &mut temp_rec) {
                 hit_anything = true;
                 closest_so_far = temp_rec.t;
-                *rec = temp_rec.clone();
+                *rec = temp_rec;
             }
         }
 
@@ -455,11 +479,11 @@ fn render(
                 let v = (j as f32 + rng.gen::<f32>()) / (im.height as f32 - 1.0);
 
                 let ray = cam.get_ray(u, v);
-                pixel_color = pixel_color + ray_color_2(&ray, &world, max_depth, &materials);
+                pixel_color += ray_color_2(&ray, &world, max_depth, &materials);
             }
-            pixel_color = pixel_color / samples_per_pixel as f32;
+            pixel_color /= samples_per_pixel as f32;
 
-            // color correct for gamma=2.0
+            // color correcrt for gamma=2.0
             let pixel_color_corrected =
                 Vec3 { x: pixel_color.x.sqrt(), y: pixel_color.y.sqrt(), z: pixel_color.z.sqrt() };
 
@@ -540,14 +564,14 @@ pub(crate) mod test {
     use crate::geometry::{Point, Vec3};
     use crate::image::ImageRGBA;
     use crate::interpolate;
-    use crate::{HitRecord, render};
-    use crate::ray::{Ray};
+    use crate::ray::Ray;
+    use crate::{render, HitRecord};
 
     #[test]
-    fn test_hitrecord(){
+    fn test_hitrecord() {
         let mut rec = HitRecord::new();
 
-        let r = Ray{orig: Point::ZERO, dir: -Vec3::UNIT_Z};
+        let r = Ray { orig: Point::ZERO, dir: -Vec3::UNIT_Z };
 
         rec.set_face_normal(&r, &Vec3::UNIT_X);
     }
