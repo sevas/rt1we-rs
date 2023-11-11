@@ -1,0 +1,13 @@
+[package]
+name = "rt1we_gui"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+egui = "0.14.2"
+rt1we_renderer = { path = "../rt1we_renderer" }
+
+#[dev-dependencies]
+#tempfile = "3.5.0"

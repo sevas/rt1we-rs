@@ -1,13 +1,8 @@
-[package]
-name = "rt1we-rs"
-version = "0.1.0"
-edition = "2021"
+[workspace]
+resolver = "1"
+members = [
+    "rt1we_renderer",
+    "rt1we_sample",
+    "rt1we_gui"
+]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-rand="0.8"
-assert_float_eq="1"
-
-[dev-dependencies]
-tempfile = "3.5.0"
