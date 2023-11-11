@@ -6,3 +6,7 @@ members = [
     "rt1we_gui"
 ]
 
+
+default-run = "rt1we_gui"
+
+
