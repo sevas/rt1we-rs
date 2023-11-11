@@ -40,7 +40,7 @@ pub fn ppmwrite(fpath: &str, im: &ImageRGBA) {
 /// - `fpath` - File path of the file to read.
 ///
 /// # File structrure
-/// ```
+/// ```text
 /// P3
 /// $width $height
 /// $maxval
@@ -96,7 +96,6 @@ pub(crate) mod test {
     fn test_read_write_roundtrip() {
         let mut im = ImageRGBA::new(5, 3);
         im.put_u32(2, 2, 0x0F0A0AFF);
-
 
         let temp_dir = env::temp_dir();
         let temp_path = temp_dir.join("rt1wk-rs_im.ppm");

@@ -512,9 +512,8 @@ fn interpolate(points: &Vec<Point>, factor: u32) -> Vec<Point> {
 pub(crate) mod test {
     use crate::geometry::{Point, Vec3};
     use crate::image::ImageRGBA;
-    use crate::interpolate;
     use crate::ray::Ray;
-    use crate::{render, HitRecord};
+    use crate::render::{interpolate, render, HitRecord};
 
     #[test]
     fn test_hitrecord() {

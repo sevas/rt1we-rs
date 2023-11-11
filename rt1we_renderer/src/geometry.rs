@@ -369,8 +369,9 @@ impl Color {
 #[cfg(test)]
 pub(crate) mod test {
     mod vec3 {
-        use crate::geometry::{lerp, make_color_from_u8, random_in_hemisphere, reflect, refract};
-        use crate::Vec3;
+        use crate::geometry::{
+            lerp, make_color_from_u8, random_in_hemisphere, reflect, refract, Vec3,
+        };
 
         #[test]
         fn test_default_vec3_is_all_zeros() {
