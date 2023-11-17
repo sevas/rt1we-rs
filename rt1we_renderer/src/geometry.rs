@@ -129,8 +129,9 @@ impl ops::Add for Vec3 {
 ///
 /// # Examples
 /// ```
-/// let p = Vec3{...};
-/// let q = Vec3{...};
+/// use rt1we_renderer::geometry::Vec3;
+/// let p = Vec3 {x:1.0, y:2.0, z:3.0};
+/// let q = Vec3{x:0.5, y:0.5, z:0.5};
 /// let r = &p + &q;
 /// ```
 impl<'a, 'b> ops::Add<&'a Vec3> for &'b Vec3 {
@@ -144,6 +145,7 @@ impl<'a, 'b> ops::Add<&'a Vec3> for &'b Vec3 {
 ///
 /// # Examples
 /// ```
+/// use rt1we_renderer::geometry::Vec3;
 /// let mut p = Vec3{x: 1.0, y: 2.0, z: 3.0 };
 /// let q = Vec3{x: 0.5, y: 0.5, z: 0.5};
 /// p += q;
@@ -160,7 +162,8 @@ impl AddAssign for Vec3 {
 ///
 /// # Examples
 /// ```
-/// let p = Vec3{x: 1.0, y: 2.0, z: 3.0 };
+/// use rt1we_renderer::geometry::Vec3;
+/// let p = Vec3 {x:1.0, y:2.0, z:3.0};
 /// let q = Vec3{x: 0.5, y: 0.5, z: 0.5};
 /// let s = p - q;
 /// ```
@@ -175,6 +178,7 @@ impl ops::Sub for Vec3 {
 ///
 /// # Examples
 /// ```
+/// use rt1we_renderer::geometry::Vec3;
 /// let mut p = Vec3{x: 1.0, y: 2.0, z: 3.0 };
 /// let q = Vec3{x: 0.5, y: 0.5, z: 0.5};
 /// p -= q;
@@ -191,8 +195,9 @@ impl SubAssign for Vec3 {
 ///
 /// # Examples
 /// ```
-/// let p = Vec3{...};
-/// let q = Vec3{...};
+/// use rt1we_renderer::geometry::Vec3;
+/// let p = Vec3 {x:1.0, y:2.0, z:3.0};
+/// let q = Vec3{x: 0.5, y: 0.5, z: 0.5};
 /// let r = &p - &q;
 /// ```
 impl<'a, 'b> ops::Sub<&'a Vec3> for &'b Vec3 {
@@ -221,7 +226,8 @@ impl ops::MulAssign<f32> for Vec3 {
 ///
 /// # Examples
 /// ```
-/// let p = Vec3 { ... }
+/// use rt1we_renderer::geometry::Vec3;
+/// let p = Vec3 {x: 1.0, y: 2.0, z: 3.0};
 /// let q = p * 3.5;
 /// ```
 impl ops::Mul<f32> for Vec3 {
@@ -235,7 +241,8 @@ impl ops::Mul<f32> for Vec3 {
 ///
 /// # Examples
 /// ```
-/// let p = Vec3 { ... }
+/// use rt1we_renderer::geometry::Vec3;
+/// let p = Vec3 {x: 1.0, y: 2.0, z: 3.0};
 /// let q = p * 3.5;
 /// ```
 impl<'a> ops::Mul<f32> for &'a Vec3 {
@@ -249,7 +256,8 @@ impl<'a> ops::Mul<f32> for &'a Vec3 {
 ///
 /// # Examples
 /// ```
-/// let p = Vec3 { ... }
+/// use rt1we_renderer::geometry::Vec3;
+/// let p = Vec3 {x:1.0, y:2.0, z:3.0};
 /// let q = 3.5 * p;
 /// ```
 impl ops::Mul<Vec3> for f32 {
@@ -270,8 +278,9 @@ impl<'a> ops::Mul<&'a Vec3> for f32 {
 ///
 /// # Examples
 /// ```
-/// let p = Vec3 { ... }
-/// let q = p * 3.5;
+/// use rt1we_renderer::geometry::Vec3;
+/// let p = Vec3 {x:1.0, y:2.0, z:3.0};
+/// let q = p / 3.5;
 /// ```
 impl ops::Div<f32> for Vec3 {
     type Output = Vec3;
@@ -299,7 +308,8 @@ impl<'a> ops::Div<f32> for &'a Vec3 {
 ///
 /// # Examples
 /// ```
-/// let p = Vec3 { ... }
+/// use rt1we_renderer::geometry::Vec3;
+/// let p = Vec3 {x:1.0, y:2.0, z:3.0};
 /// let q = -&p;
 /// ```
 impl<'a> ops::Neg for &'a Vec3 {
@@ -313,7 +323,8 @@ impl<'a> ops::Neg for &'a Vec3 {
 ///
 /// # Examples
 /// ```
-/// let p = Vec3 { ... }
+/// use rt1we_renderer::geometry::Vec3;
+/// let p = Vec3 {x:1.0, y:2.0, z:3.0};
 /// let q = -p;
 /// ```
 impl ops::Neg for Vec3 {
@@ -340,8 +351,9 @@ pub fn lerp(a: &Vec3, b: &Vec3, t: f32) -> Vec3 {
 ///
 /// # Examples
 /// ```
-/// let p = Vec3 {...};
-/// let q = Vec3 {...};
+/// use rt1we_renderer::geometry::{Vec3, dot};
+/// let p = Vec3 {x:1.0, y:2.0, z:3.0};
+/// let q = Vec3 {x:3.0, y:2.0, z:1.0};
 /// let pdotq = dot(&p, &q);
 ///
 /// ```
