@@ -19,10 +19,9 @@ Cargo workspace (resolver v1) with three members:
   (`trig.rs`).
 - `rt1we_sample` — CLI binary that renders a trajectory of frames to PPM files under `out/`
   using the single-threaded `render()` path.
-- `rt1we_gui` — `egui`/`eframe` desktop GUI (binary name `rt1we_gui`, and the workspace's
-  `default-run`). Lets you tweak resolution/depth/samples interactively and toggle between the
-  scalar `render()` and the `rayon`-parallelized `render_parallel()`, displaying the result as an
-  egui texture.
+- `rt1we_gui` — `egui`/`eframe` desktop GUI (binary name `rt1we_gui`). Lets you tweak
+  resolution/depth/samples interactively and toggle between the scalar `render()` and the
+  `rayon`-parallelized `render_parallel()`, displaying the result as an egui texture.
 
 `rt1we_gui` and `rt1we_sample` both depend on `rt1we_renderer` via path dependency; neither
 contains raytracing logic itself, only glue/UI code.
@@ -68,10 +67,11 @@ Run a single module's tests (e.g. everything in `render.rs`):
 cargo test -p rt1we_renderer render::test
 ```
 
-Run the GUI app (workspace default-run):
+Run the GUI app (the workspace has no `default-run`, so a bare `cargo run` errors with
+"could not determine which binary to run" — pass `-p rt1we_gui`):
 ```
-cargo run
-cargo run --release
+cargo run -p rt1we_gui
+cargo run -p rt1we_gui --release
 ```
 
 Run the CLI sample renderer (writes PPM frames to `./out/`, so create that dir first):
@@ -106,6 +106,8 @@ Not part of the Rust build; used for inspecting render output:
 ## CI
 
 `.github/workflows/rust.yml` runs `cargo build`, `cargo test`, then does a release render
-(`cargo run --release`, workspace default-run is `rt1we_gui` — note this differs from the CLI
-`out/`-writing behavior of `rt1we_sample`'s `main()`) and uploads `out/` as an artifact. Coverage
-is tracked via `codecov.yaml`/`codecov.yml` against the `main` branch.
+(`cargo run --release`) and uploads `out/` as an artifact. Note: that bare `cargo run --release`
+step currently fails — the workspace has two binaries (`rt1we_gui`, `rt1we_sample`) and no
+`default-run`, so cargo can't pick one without `-p`/`--bin`; this is a pre-existing CI bug, not
+something introduced by removing the (already-inert) `default-run` key from the workspace
+manifest. Coverage is tracked via `codecov.yaml`/`codecov.yml` against the `main` branch.

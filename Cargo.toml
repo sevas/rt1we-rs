@@ -5,8 +5,3 @@ members = [
     "rt1we_sample",
     "rt1we_gui"
 ]
-
-
-default-run = "rt1we_gui"
-
-

@@ -1,12 +1,11 @@
 use crate::geometry::{
-    dot, lerp, random_in_unit_sphere, random_unit_vector, reflect, refract, Color, Point, Vec3,
+    Color, Point, Vec3, dot, lerp, random_in_unit_sphere, random_unit_vector, reflect, refract,
 };
-use crate::image::{flipv, ImageRGBA};
-use crate::ray::{hit_sphere2, Ray};
+use crate::image::ImageRGBA;
+use crate::ray::{Ray, hit_sphere2};
 use crate::trig::deg2rad;
 use rand::Rng;
 use rayon::prelude::*;
-use std::time::Instant;
 
 /// Define a single ray-to-object hit.
 #[derive(Copy, Clone)]
@@ -60,7 +59,7 @@ struct Lambertian {
 
 impl Material for Lambertian {
     fn scatter(
-        &self, r_in: &Ray, rec: &mut HitRecord, attenuation: &mut Color, scattered: &mut Ray,
+        &self, _r_in: &Ray, rec: &mut HitRecord, attenuation: &mut Color, scattered: &mut Ray,
     ) -> bool {
         let mut scatter_direction = rec.normal + random_unit_vector();
         if scatter_direction.near_zero() {
@@ -194,7 +193,7 @@ pub struct Plane {
 }
 
 impl Hittable for Plane {
-    fn hit(self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
+    fn hit(self, r: &Ray, _t_min: f32, _t_max: f32, rec: &mut HitRecord) -> bool {
         let denom = dot(&self.normal, &r.dir);
         if denom > 1e-6 {
             let v = self.center - r.orig;
@@ -257,21 +256,21 @@ impl HittableList {
     }
 }
 
-/// Using single sphere as input
-fn ray_color(r: &Ray) -> Color {
-    let t = hit_sphere2(&Point { x: 0.0, y: 0.0, z: -1.0 }, 0.5, r);
+// /// Using single sphere as input
+// fn ray_color(r: &Ray) -> Color {
+//     let t = hit_sphere2(&Point { x: 0.0, y: 0.0, z: -1.0 }, 0.5, r);
 
-    if t > 0.0 {
-        // println!("ray hit sphere at {t}");
+//     if t > 0.0 {
+//         // println!("ray hit sphere at {t}");
 
-        let n = (r.at(t) - Vec3 { x: 0.0, y: 0.0, z: -1.0 }).normed();
-        return 0.5 * Color { x: n.x + 1.0, y: n.y + 1.0, z: n.z + 1.0 };
-    }
+//         let n = (r.at(t) - Vec3 { x: 0.0, y: 0.0, z: -1.0 }).normed();
+//         return 0.5 * Color { x: n.x + 1.0, y: n.y + 1.0, z: n.z + 1.0 };
+//     }
 
-    let unit_direction = &r.dir.normed();
-    let t = 0.5 * (unit_direction.y + 1.0);
-    lerp(&Color::WHITE, &Color { x: 0.5, y: 0.7, z: 1.0 }, t)
-}
+//     let unit_direction = &r.dir.normed();
+//     let t = 0.5 * (unit_direction.y + 1.0);
+//     lerp(&Color::WHITE, &Color { x: 0.5, y: 0.7, z: 1.0 }, t)
+// }
 
 /// Cast a single ray in the scene and return the computed pixel color.
 ///
@@ -417,9 +416,9 @@ pub fn render(
     let lambertian_green_index = 0;
     let lambertian_pink_index = 1;
     let metal_shiny_index = 2;
-    let metal_fuzzy_index = 3;
+    let _metal_fuzzy_index = 3;
     let dielectric_index = 4;
-    let dielectric2_index = 5;
+    let _dielectric2_index = 5;
 
     // world
     let mut world = HittableList::new();
@@ -607,7 +606,7 @@ pub(crate) mod test {
     use crate::geometry::{Point, Vec3};
     use crate::image::ImageRGBA;
     use crate::ray::Ray;
-    use crate::render::{interpolate, render, HitRecord};
+    use crate::render::{HitRecord, interpolate, render};
 
     #[test]
     fn test_hitrecord() {
