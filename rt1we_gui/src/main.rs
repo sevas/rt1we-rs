@@ -108,7 +108,8 @@ impl eframe::App for MyApp {
                         [img.width, img.height],
                         &img.pixels,
                     );
-                    self.texture = Some(ctx.load_texture("render", color_image, Default::default()));
+                    self.texture =
+                        Some(ctx.load_texture("render", color_image, egui::TextureOptions::NEAREST));
                 }
 
                 if ui.button("Reset view").clicked() {
