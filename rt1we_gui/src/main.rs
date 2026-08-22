@@ -29,6 +29,7 @@ struct MyApp {
     texture: Option<egui::TextureHandle>,
     zoom: f32,
     pan: egui::Vec2,
+    dark_mode: bool,
 }
 
 impl Default for MyApp {
@@ -42,14 +43,22 @@ impl Default for MyApp {
             texture: None,
             zoom: 1.0,
             pan: egui::Vec2::ZERO,
+            dark_mode: true,
         }
     }
 }
 
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        ctx.set_visuals(if self.dark_mode { egui::Visuals::dark() } else { egui::Visuals::light() });
+
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("rt1we-gui");
+            ui.horizontal(|ui| {
+                ui.heading("rt1we-gui");
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                    ui.checkbox(&mut self.dark_mode, "Dark mode");
+                });
+            });
 
             ui.horizontal(|ui| {
                 ui.label("Resolution:");
