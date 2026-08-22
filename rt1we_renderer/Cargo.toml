@@ -12,3 +12,8 @@ rayon="1"
 
 [dev-dependencies]
 tempfile = "3.5.0"
+criterion = "0.5"
+
+[[bench]]
+name = "render_bench"
+harness = false
