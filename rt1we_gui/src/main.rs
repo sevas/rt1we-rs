@@ -27,11 +27,22 @@ struct MyApp {
     samples_per_pixel: u32,
     use_parallel: bool,
     texture: Option<egui::TextureHandle>,
+    zoom: f32,
+    pan: egui::Vec2,
 }
 
 impl Default for MyApp {
     fn default() -> Self {
-        Self { width: 160, height: 120, max_depth: 50, samples_per_pixel: 100, use_parallel: true, texture: None }
+        Self {
+            width: 160,
+            height: 120,
+            max_depth: 50,
+            samples_per_pixel: 100,
+            use_parallel: true,
+            texture: None,
+            zoom: 1.0,
+            pan: egui::Vec2::ZERO,
+        }
     }
 }
 
@@ -70,37 +81,71 @@ impl eframe::App for MyApp {
 
             ui.separator();
 
-            if ui.button("Render one frame").clicked() {
-                let img = if self.use_parallel {
-                    render_parallel(
-                        self.width as usize,
-                        self.height as usize,
-                        self.max_depth as usize,
-                        self.samples_per_pixel as usize,
-                        &rt1we_renderer::geometry::Vec3::new(0.0, 0.0, 0.0),
-                        false,
-                    )
-                } else {
-                    render(
-                        self.width as usize,
-                        self.height as usize,
-                        self.max_depth as usize,
-                        self.samples_per_pixel as usize,
-                        &rt1we_renderer::geometry::Vec3::new(0.0, 0.0, 0.0),
-                        false,
-                    )
-                };
-                println!("Render complete: {}x{}", img.width, img.height);
-                let img = flipv(&img);
-                let color_image = egui::ColorImage::from_rgba_unmultiplied(
-                    [img.width, img.height],
-                    &img.pixels,
-                );
-                self.texture = Some(ctx.load_texture("render", color_image, Default::default()));
-            }
+            ui.horizontal(|ui| {
+                if ui.button("Render one frame").clicked() {
+                    let img = if self.use_parallel {
+                        render_parallel(
+                            self.width as usize,
+                            self.height as usize,
+                            self.max_depth as usize,
+                            self.samples_per_pixel as usize,
+                            &rt1we_renderer::geometry::Vec3::new(0.0, 0.0, 0.0),
+                            false,
+                        )
+                    } else {
+                        render(
+                            self.width as usize,
+                            self.height as usize,
+                            self.max_depth as usize,
+                            self.samples_per_pixel as usize,
+                            &rt1we_renderer::geometry::Vec3::new(0.0, 0.0, 0.0),
+                            false,
+                        )
+                    };
+                    println!("Render complete: {}x{}", img.width, img.height);
+                    let img = flipv(&img);
+                    let color_image = egui::ColorImage::from_rgba_unmultiplied(
+                        [img.width, img.height],
+                        &img.pixels,
+                    );
+                    self.texture = Some(ctx.load_texture("render", color_image, Default::default()));
+                }
+
+                if ui.button("Reset view").clicked() {
+                    self.zoom = 1.0;
+                    self.pan = egui::Vec2::ZERO;
+                }
+            });
 
             if let Some(tex) = &self.texture {
-                ui.image(tex);
+                let (rect, response) =
+                    ui.allocate_exact_size(ui.available_size(), egui::Sense::click_and_drag());
+
+                self.pan += response.drag_delta();
+
+                if let Some(pointer) = response.hover_pos() {
+                    let scroll = ui.input(|i| i.smooth_scroll_delta.y);
+                    if scroll != 0.0 {
+                        let old_zoom = self.zoom;
+                        self.zoom = (self.zoom * (scroll * 0.002).exp()).clamp(0.05, 40.0);
+
+                        // Keep the point under the cursor stationary while zooming.
+                        let center = rect.center() + self.pan;
+                        let cursor_from_center = pointer - center;
+                        self.pan -= cursor_from_center * (self.zoom / old_zoom - 1.0);
+                    }
+                }
+
+                let img_size = tex.size_vec2() * self.zoom;
+                let img_rect = egui::Rect::from_center_size(rect.center() + self.pan, img_size);
+
+                let painter = ui.painter_at(rect);
+                painter.image(
+                    tex.id(),
+                    img_rect,
+                    egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)),
+                    egui::Color32::WHITE,
+                );
             }
         });
     }
