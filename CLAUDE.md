@@ -112,8 +112,9 @@ Not part of the Rust build; used for inspecting render output:
 ## CI
 
 `.github/workflows/rust.yml` runs `cargo build`, `cargo test`, then does a release render
-(`cargo run --release`) and uploads `out/` as an artifact. Note: that bare `cargo run --release`
-step currently fails — the workspace has two binaries (`rt1we_gui`, `rt1we_sample`) and no
-`default-run`, so cargo can't pick one without `-p`/`--bin`; this is a pre-existing CI bug, not
-something introduced by removing the (already-inert) `default-run` key from the workspace
-manifest. Coverage is tracked via `codecov.yaml`/`codecov.yml` against the `main` branch.
+(`cargo run -p rt1we_sample --release`, which writes into `out/`) and uploads `out/` as an
+artifact. It must target `rt1we_sample` explicitly — the workspace has two binaries (`rt1we_gui`,
+`rt1we_sample`) and no `default-run`, so a bare `cargo run` can't pick one, and `rt1we_gui`
+wouldn't populate `out/` anyway (it needs a live window/click, and now saves renders under
+`history/`, not `out/`). Coverage is tracked via `codecov.yaml`/`codecov.yml` against the `main`
+branch.
