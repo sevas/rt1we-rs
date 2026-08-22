@@ -61,7 +61,7 @@ impl Vec3 {
     pub fn random() -> Vec3 {
         let mut rng = rand::thread_rng();
 
-        Vec3 { x: rng.gen(), y: rng.gen(), z: rng.gen() }
+        Vec3 { x: rng.r#gen(), y: rng.r#gen(), z: rng.r#gen() }
     }
 
     /// Returns a random vector with values in a given range.

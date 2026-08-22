@@ -5,6 +5,7 @@ use crate::image::{flipv, ImageRGBA};
 use crate::ray::{hit_sphere2, Ray};
 use crate::trig::deg2rad;
 use rand::Rng;
+use rayon::prelude::*;
 use std::time::Instant;
 
 /// Define a single ray-to-object hit.
@@ -38,7 +39,7 @@ impl HitRecord {
 }
 
 /// Material scattering behaviour.
-trait Material {
+trait Material: Sync {
     /// Scatter or absorb a ray.
     ///
     /// # Arguments
@@ -124,7 +125,7 @@ impl Material for Dieletric {
         let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
         let cannot_refract = refraction_ratio * sin_theta > 1.0;
         let direction = if cannot_refract
-            || Dieletric::reflectance(cos_theta, refraction_ratio) > rng.gen::<f32>()
+            || Dieletric::reflectance(cos_theta, refraction_ratio) > rng.r#gen::<f32>()
         {
             reflect(&unit_dir, &rec.normal)
         } else {
@@ -463,8 +464,8 @@ pub fn render(
             let mut pixel_color = Color::BLACK;
 
             for _ in 0..samples_per_pixel {
-                let u = (i as f32 + rng.gen::<f32>()) / (im.width as f32 - 1.0);
-                let v = (j as f32 + rng.gen::<f32>()) / (im.height as f32 - 1.0);
+                let u = (i as f32 + rng.r#gen::<f32>()) / (im.width as f32 - 1.0);
+                let v = (j as f32 + rng.r#gen::<f32>()) / (im.height as f32 - 1.0);
 
                 let ray = cam.get_ray(u, v);
                 pixel_color += ray_color_2(&ray, &world, max_depth, &materials);
@@ -484,6 +485,90 @@ pub fn render(
             im.put(i, j, ir, ig, ib, 255);
         }
     }
+    im
+}
+
+pub fn render_parallel(
+    width: usize, height: usize, max_depth: usize, samples_per_pixel: usize, position: &Point,
+) -> ImageRGBA {
+    let aspect_ratio = width as f32 / height as f32;
+
+    let mut im = ImageRGBA::new(width, height);
+    let materials: Vec<Box<dyn Material>> = vec![
+        Box::new(Lambertian { albedo: Color { x: 0.8, y: 0.8, z: 0.0 } }),
+        Box::new(Lambertian { albedo: Color { x: 0.7, y: 0.3, z: 0.3 } }),
+        Box::new(Metal { albedo: Color { x: 0.8, y: 0.8, z: 0.8 }, fuzz: 0.3 }),
+        Box::new(Metal { albedo: Color { x: 0.8, y: 0.6, z: 0.2 }, fuzz: 1.0 }),
+        Box::new(Dieletric { refraction_index: 1.5 }),
+        Box::new(Dieletric { refraction_index: 1.5 }),
+    ];
+
+    let lambertian_green_index = 0;
+    let lambertian_pink_index = 1;
+    let metal_shiny_index = 2;
+    let _metal_fuzzy_index = 3;
+    let dielectric_index = 4;
+    let _dielectric2_index = 5;
+
+    let mut world = HittableList::new();
+    world.add(&Sphere {
+        center: Point { x: 0.0, y: 0.0, z: -1.0 },
+        radius: 0.5,
+        material_id: dielectric_index,
+    });
+    world.add(&Sphere {
+        center: Point { x: -1.0, y: 0.0, z: -1.0 },
+        radius: 0.5,
+        material_id: metal_shiny_index,
+    });
+    world.add(&Sphere {
+        center: Point { x: 1.0, y: 0.0, z: -1.0 },
+        radius: 0.5,
+        material_id: lambertian_pink_index,
+    });
+    world.add(&Sphere {
+        center: Point { x: 0.0, y: -100.5, z: -1.0 },
+        radius: 100.0,
+        material_id: lambertian_green_index,
+    });
+
+    let cam = Camera::new(
+        *position,
+        Vec3::new(0.0, 0.0, -1.0),
+        Vec3::new(0.0, 1.0, 0.0),
+        90.0,
+        aspect_ratio,
+    );
+    println!("--- Starting parallel render");
+
+    im.pixels.par_chunks_mut(width * 4).enumerate().rev().for_each(|(j, row)| {
+        let mut rng = rand::thread_rng();
+        for i in 0..width {
+            let mut pixel_color = Color::BLACK;
+
+            for _ in 0..samples_per_pixel {
+                let u = (i as f32 + rng.r#gen::<f32>()) / (width as f32 - 1.0);
+                let v = (j as f32 + rng.r#gen::<f32>()) / (height as f32 - 1.0);
+
+                let ray = cam.get_ray(u, v);
+                pixel_color += ray_color_2(&ray, &world, max_depth, &materials);
+            }
+            pixel_color /= samples_per_pixel as f32;
+
+            let pixel_color_corrected =
+                Vec3 { x: pixel_color.x.sqrt(), y: pixel_color.y.sqrt(), z: pixel_color.z.sqrt() };
+
+            let ir = (clamp(pixel_color_corrected.x, 0.0, 0.999) * 256.0) as u8;
+            let ig = (clamp(pixel_color_corrected.y, 0.0, 0.999) * 256.0) as u8;
+            let ib = (clamp(pixel_color_corrected.z, 0.0, 0.999) * 256.0) as u8;
+
+            let idx = i * 4;
+            row[idx] = ir;
+            row[idx + 1] = ig;
+            row[idx + 2] = ib;
+            row[idx + 3] = 255;
+        }
+    });
     im
 }
 
