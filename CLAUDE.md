@@ -21,7 +21,13 @@ Cargo workspace (resolver v1) with three members:
   using the single-threaded `render()` path.
 - `rt1we_gui` — `egui`/`eframe` desktop GUI (binary name `rt1we_gui`). Lets you tweak
   resolution/depth/samples interactively and toggle between the scalar `render()` and the
-  `rayon`-parallelized `render_parallel()`, displaying the result as an egui texture.
+  `rayon`-parallelized `render_parallel()`, displaying the result as an egui texture. Every
+  render is persisted to a `history/` directory (created relative to the working directory) as
+  a full-res PPM, a downsampled thumbnail PPM, and a `.meta` key=value sidecar with the render
+  parameters (`rt1we_gui/src/history.rs`); a right-hand side panel lists past renders by
+  thumbnail and lets you click one to reload both the image and the parameters that produced it.
+  History persists across restarts by re-scanning `history/` on startup — there is no database,
+  just files on disk.
 
 `rt1we_gui` and `rt1we_sample` both depend on `rt1we_renderer` via path dependency; neither
 contains raytracing logic itself, only glue/UI code.
