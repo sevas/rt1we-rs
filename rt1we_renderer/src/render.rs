@@ -397,8 +397,10 @@ impl Camera {
 /// - `height` - Output image height
 /// - `max_depth` - Maximum number of ray bounces after a hit.
 /// - `samples_per_pixel` - How many random rays to generate and average to compute final pixel color.
+/// - `verbose` - Whether to print progress to stdout.
 pub fn render(
     width: usize, height: usize, max_depth: usize, samples_per_pixel: usize, position: &Point,
+    verbose: bool,
 ) -> ImageRGBA {
     let aspect_ratio = width as f32 / height as f32;
 
@@ -454,10 +456,14 @@ pub fn render(
         aspect_ratio,
     );
     let mut rng = rand::thread_rng();
-    println!("--- Starting render");
+    if verbose {
+        println!("--- Starting render");
+    }
 
     for j in (0..im.height).rev() {
-        print!("\rScanlines remaining {j}");
+        if verbose {
+            print!("\rScanlines remaining {j}");
+        }
 
         for i in 0..im.width {
             // println!("=========== BEGIN rendering pixel at [{i}, {j}]");
@@ -490,6 +496,7 @@ pub fn render(
 
 pub fn render_parallel(
     width: usize, height: usize, max_depth: usize, samples_per_pixel: usize, position: &Point,
+    verbose: bool,
 ) -> ImageRGBA {
     let aspect_ratio = width as f32 / height as f32;
 
@@ -539,7 +546,9 @@ pub fn render_parallel(
         90.0,
         aspect_ratio,
     );
-    println!("--- Starting parallel render");
+    if verbose {
+        println!("--- Starting parallel render");
+    }
 
     im.pixels.par_chunks_mut(width * 4).enumerate().rev().for_each(|(j, row)| {
         let mut rng = rand::thread_rng();
@@ -612,7 +621,7 @@ pub(crate) mod test {
     #[test]
     fn test_nominal_render() {
         let pos = Point::new(-2.0, 2.0, 1.0);
-        let im = render(16, 9, 5, 1, &pos);
+        let im = render(16, 9, 5, 1, &pos, false);
         let default_img = ImageRGBA::new(16, 9);
 
         assert_eq!(im.width, 16);

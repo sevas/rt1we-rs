@@ -30,7 +30,7 @@ fn main() {
     for (i, p) in trajectory.iter().enumerate() {
         print!("\n\n--- Rendering frame #{}/{}", i, count);
         let start = Instant::now();
-        let im = render(width, height, max_depth, samples_per_pixel, p);
+        let im = render(width, height, max_depth, samples_per_pixel, p, true);
         let elapsed = start.elapsed();
 
         println!("\n--- Summary");

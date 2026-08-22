@@ -78,6 +78,7 @@ impl eframe::App for MyApp {
                         self.max_depth as usize,
                         self.samples_per_pixel as usize,
                         &rt1we_renderer::geometry::Vec3::new(0.0, 0.0, 0.0),
+                        false,
                     )
                 } else {
                     render(
@@ -86,6 +87,7 @@ impl eframe::App for MyApp {
                         self.max_depth as usize,
                         self.samples_per_pixel as usize,
                         &rt1we_renderer::geometry::Vec3::new(0.0, 0.0, 0.0),
+                        false,
                     )
                 };
                 println!("Render complete: {}x{}", img.width, img.height);
