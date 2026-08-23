@@ -99,7 +99,7 @@ pub(crate) mod test {
 
         let temp_dir = env::temp_dir();
         let temp_path = temp_dir.join("rt1wk-rs_im.ppm");
-        let fpath = temp_path.as_path().to_str().expect("invalid path").clone();
+        let fpath = temp_path.as_path().to_str().expect("invalid path");
 
         ppmwrite(fpath, &im);
 

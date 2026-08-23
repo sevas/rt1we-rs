@@ -19,10 +19,15 @@ Cargo workspace (resolver v1) with three members:
   (`trig.rs`).
 - `rt1we_sample` — CLI binary that renders a trajectory of frames to PPM files under `out/`
   using the single-threaded `render()` path.
-- `rt1we_gui` — `egui`/`eframe` desktop GUI (binary name `rt1we_gui`, and the workspace's
-  `default-run`). Lets you tweak resolution/depth/samples interactively and toggle between the
-  scalar `render()` and the `rayon`-parallelized `render_parallel()`, displaying the result as an
-  egui texture.
+- `rt1we_gui` — `egui`/`eframe` desktop GUI (binary name `rt1we_gui`). Lets you tweak
+  resolution/depth/samples interactively and toggle between the scalar `render()` and the
+  `rayon`-parallelized `render_parallel()`, displaying the result as an egui texture. Every
+  render is persisted to a `history/` directory (created relative to the working directory) as
+  a full-res PPM, a downsampled thumbnail PPM, and a `.meta` key=value sidecar with the render
+  parameters (`rt1we_gui/src/history.rs`); a right-hand side panel lists past renders by
+  thumbnail and lets you click one to reload both the image and the parameters that produced it.
+  History persists across restarts by re-scanning `history/` on startup — there is no database,
+  just files on disk.
 
 `rt1we_gui` and `rt1we_sample` both depend on `rt1we_renderer` via path dependency; neither
 contains raytracing logic itself, only glue/UI code.
@@ -68,10 +73,11 @@ Run a single module's tests (e.g. everything in `render.rs`):
 cargo test -p rt1we_renderer render::test
 ```
 
-Run the GUI app (workspace default-run):
+Run the GUI app (the workspace has no `default-run`, so a bare `cargo run` errors with
+"could not determine which binary to run" — pass `-p rt1we_gui`):
 ```
-cargo run
-cargo run --release
+cargo run -p rt1we_gui
+cargo run -p rt1we_gui --release
 ```
 
 Run the CLI sample renderer (writes PPM frames to `./out/`, so create that dir first):
@@ -106,6 +112,9 @@ Not part of the Rust build; used for inspecting render output:
 ## CI
 
 `.github/workflows/rust.yml` runs `cargo build`, `cargo test`, then does a release render
-(`cargo run --release`, workspace default-run is `rt1we_gui` — note this differs from the CLI
-`out/`-writing behavior of `rt1we_sample`'s `main()`) and uploads `out/` as an artifact. Coverage
-is tracked via `codecov.yaml`/`codecov.yml` against the `main` branch.
+(`cargo run -p rt1we_sample --release`, which writes into `out/`) and uploads `out/` as an
+artifact. It must target `rt1we_sample` explicitly — the workspace has two binaries (`rt1we_gui`,
+`rt1we_sample`) and no `default-run`, so a bare `cargo run` can't pick one, and `rt1we_gui`
+wouldn't populate `out/` anyway (it needs a live window/click, and now saves renders under
+`history/`, not `out/`). Coverage is tracked via `codecov.yaml`/`codecov.yml` against the `main`
+branch.
