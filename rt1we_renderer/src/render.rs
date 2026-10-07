@@ -128,9 +128,9 @@ impl Material for Dieletric {
         {
             reflect(&unit_dir, &rec.normal)
         } else {
-            refract(&unit_dir, &rec.normal, self.refraction_index)
+            refract(&unit_dir, &rec.normal, refraction_ratio)
         };
-        *scattered = Ray { orig: rec.p, dir: -direction };
+        *scattered = Ray { orig: rec.p, dir: direction };
         // println!("[mat=dielectric] IN: {unit_dir:?} OUT: {direction:?}");
 
         // let refracted = refract(&unit_dir, &rec.normal, refraction_ratio);
